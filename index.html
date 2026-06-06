@@ -3881,6 +3881,15 @@
 
         // Clipboard management helper
         function copyTextToClipboard(textToCopy) {
+            if (typeof Android !== "undefined" && Android.copyToClipboard) {
+                try {
+                    Android.copyToClipboard(textToCopy);
+                    showToast("📋 Text copied to clipboard !");
+                    return;
+                } catch (e) {
+                    console.error("Native copy failed, falling back", e);
+                }
+            }
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(textToCopy)
                     .then(() => {
@@ -4025,19 +4034,56 @@
                 showToast("⏳ Rendering bill image...");
                 const imgDataUrl = buildBillCanvas(activeExplorerBill);
                 const phone = activeExplorerBill.customerPhone || "";
+                
                 if (imgDataUrl && typeof Android !== "undefined" && Android.shareImageToWhatsApp) {
                     Android.shareImageToWhatsApp(imgDataUrl, phone);
-                } else {
-                    const win = window.open();
-                    if (win) {
-                        win.document.write(`<div style="text-align:center;padding:20px;font-family:sans-serif;"><p>Here is your generated invoice image. Right click/long press to save or share:</p><img src="${imgDataUrl}" style="box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:8px;max-width:100%;height:auto;"/></div>`);
-                    } else {
-                        showToast("⚠️ Browser blocked invoice window. Try copying text instead.");
+                } else if (imgDataUrl && navigator.share) {
+                    try {
+                        const arr = imgDataUrl.split(',');
+                        const mime = arr[0].match(/:(.*?);/)[1];
+                        const bstr = atob(arr[1]);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                        }
+                        const billFile = new File([u8arr], `Receipt_${activeExplorerBill.id}.png`, { type: mime });
+                        
+                        if (navigator.canShare && navigator.canShare({ files: [billFile] })) {
+                            navigator.share({
+                                files: [billFile],
+                                title: `Receipt ${activeExplorerBill.id}`,
+                                text: `Invoice Receipt from Pranali Kirana for ₹${activeExplorerBill.total.toFixed(2)}`
+                            }).then(() => {
+                                showToast("✓ Bill shared successfully!");
+                            }).catch((shareError) => {
+                                if (shareError.name !== 'AbortError') {
+                                    console.error("Web share failed", shareError);
+                                    webShareFallback(imgDataUrl);
+                                }
+                            });
+                        } else {
+                            webShareFallback(imgDataUrl);
+                        }
+                    } catch (e) {
+                        console.error("Web Share API error, using legacy fallback:", e);
+                        webShareFallback(imgDataUrl);
                     }
+                } else {
+                    webShareFallback(imgDataUrl);
                 }
             } catch (err) {
                 console.error("Renderer error:", err);
                 showToast("❌ Unable to render bill as image.");
+            }
+        }
+
+        function webShareFallback(imgDataUrl) {
+            const win = window.open();
+            if (win) {
+                win.document.write(`<div style="text-align:center;padding:20px;font-family:sans-serif;"><p>Here is your generated invoice image. Right click/long press to save or share:</p><img src="${imgDataUrl}" style="box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:8px;max-width:100%;height:auto;"/></div>`);
+            } else {
+                showToast("⚠️ Browser blocked invoice window. Try copying text instead.");
             }
         }
 

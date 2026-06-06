@@ -1,0 +1,4192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SmartKirana</title>
+    <script>
+        (function() {
+            if (localStorage.getItem('sk_theme') === 'dark') {
+                document.documentElement.classList.add('theme-dark');
+            }
+        })();
+    </script>
+    <style>
+        /* Color Palette & Global Variables */
+        :root {
+            --primary-color: #2E7D32;
+            --primary-light: #E8F5E9;
+            --primary-dark: #1B5E20;
+            --accent-color: #4CAF50;
+            --warning-color: #FF9800;
+            --danger-color: #D32F2F;
+            --bg-color: #F4F6F4;
+            --surface-color: #FFFFFF;
+            --text-color: #212121;
+            --text-secondary: #666666;
+            --border-color: #E0E0E0;
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --safe-area-inset-top: env(safe-area-inset-top, 0px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        html.theme-dark {
+            --primary-color: #81C784;
+            --primary-light: #1A3E1C;
+            --primary-dark: #C8E6C9;
+            --accent-color: #4CAF50;
+            --warning-color: #FFB74D;
+            --danger-color: #EF5350;
+            --bg-color: #121212;
+            --surface-color: #1F1F1F;
+            --text-color: #F5F5F5;
+            --text-secondary: #B0B0B0;
+            --border-color: #333333;
+        }
+
+        /* Essential Reset & Mobile Configuration */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            outline: none;
+        }
+
+        html {
+            height: 100%;
+            height: -webkit-fill-available;
+            height: 100dvh;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 15px;
+            height: 100%;
+            height: -webkit-fill-available;
+            height: 100dvh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-top: var(--safe-area-inset-top);
+            padding-bottom: var(--safe-area-inset-bottom);
+        }
+
+        input, select, textarea, button {
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        input, select {
+            user-select: text; /* standard readable textfields */
+        }
+
+        /* Typography spacing rules */
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* Scrollbars Custom style for clean design */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Top Header Navigation bar */
+        .app-header {
+            height: 60px;
+            background-color: var(--surface-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-logo {
+            font-size: 24px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-color);
+            letter-spacing: 0.5px;
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background-color: var(--bg-color);
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .settings-btn:active {
+            background-color: var(--primary-light);
+        }
+
+        /* Main app body panels framework */
+        .app-content {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow-y: auto;
+            padding: 16px;
+            opacity: 0;
+            transform: translateY(12px);
+            pointer-events: none;
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .tab-panel.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            z-index: 5;
+        }
+
+        /* Bottom Nav Frame spacing */
+        .bottom-nav {
+            height: 64px;
+            background-color: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.03);
+        }
+
+        .nav-item {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border: none;
+            background: none;
+            cursor: pointer;
+            gap: 3px;
+            transition: color 0.15s ease-out;
+        }
+
+        .nav-icon {
+            font-size: 19px;
+            transition: transform 0.15s ease-out;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+        .nav-item.active .nav-icon {
+            transform: scale(1.15);
+        }
+
+        /* Universal Materials UI styling rules */
+        .card {
+            background-color: var(--surface-color);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: transform 0.15s;
+        }
+        .card:active {
+            transform: scale(0.995);
+        }
+
+        .btn {
+            height: 48px;
+            min-height: 48px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 16px;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:active {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+        }
+        .btn-secondary:active {
+            background-color: #C8E6C9;
+        }
+
+        .btn-danger {
+            background-color: #FFEBEE;
+            color: var(--danger-color);
+        }
+        .btn-danger:active {
+            background-color: #FFCDD2;
+        }
+
+        .btn-block {
+            width: 100%;
+            display: flex;
+        }
+
+        .badge {
+            display: inline-flex;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-success {
+            background-color: #E8F5E9;
+            color: var(--primary-color);
+        }
+
+        .badge-warning {
+            background-color: #FFF3E0;
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background-color: #FFEBEE;
+            color: var(--danger-color);
+        }
+
+        /* TAB 1: DASHBOARD LAYOUT */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .dashboard-card {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 14px;
+        }
+
+        .dash-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .dash-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-color);
+        }
+
+        .dash-value.low-stock {
+            color: var(--danger-color);
+        }
+
+        .recent-bills-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .recent-bills-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .recent-bills-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .bill-sm-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .bill-sm-card.status-pending {
+            border-left-color: var(--warning-color);
+        }
+
+        .bill-sm-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .bill-sm-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .bill-sm-date {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .bill-sm-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .bill-sm-total {
+            font-weight: 800;
+            font-size: 15px;
+        }
+
+        /* TAB 2: INVENTORY LAYOUT */
+        .search-add-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-search-container {
+            position: relative;
+            flex: 1;
+        }
+
+        .input-search {
+            width: 100%;
+            height: 48px;
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0 16px 0 44px;
+            font-size: 14px;
+            color: var(--text-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            transition: border-color 0.2s;
+        }
+        .input-search:focus {
+            border-color: var(--primary-color);
+        }
+
+        .search-prefix-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            pointer-events: none;
+            color: var(--text-secondary);
+        }
+
+        .btn-add-item {
+            width: 48px;
+            height: 48px;
+            min-height: 48px;
+            min-width: 48px;
+            padding: 0;
+            border-radius: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .inventory-scroll-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 24px;
+        }
+
+        /* Swipe-to-delete cards infrastructure */
+        .card-item-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 14px;
+            background-color: var(--danger-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            width: 100%;
+        }
+
+        .swipe-background-delete {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 90px;
+            background-color: var(--danger-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0 14px 14px 0;
+            z-index: 1;
+            cursor: pointer;
+        }
+
+        .swipe-trash-icon {
+            font-size: 20px;
+            margin-bottom: 2px;
+        }
+
+        .swipe-delete-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .inventory-card {
+            background-color: var(--surface-color);
+            position: relative;
+            z-index: 2;
+            padding: 14px 16px;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .inventory-card.low-stock-alert {
+            border-left: 5px solid var(--warning-color);
+        }
+
+        .inv-card-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .inv-card-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-color);
+            word-break: break-word;
+        }
+
+        .inv-card-category {
+            font-size: 11px;
+            color: #555;
+            background-color: #ededed;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .inv-card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inv-card-unit-price {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+
+        .inv-card-stock {
+            font-size: 13px;
+        }
+
+        .inv-card-stock span {
+            font-weight: 800;
+        }
+
+        .inv-card-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid #FAFAFA;
+            padding-top: 8px;
+        }
+
+        .item-action-btn {
+            border: none;
+            background: none;
+            font-size: 13px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .item-action-edit {
+            color: var(--primary-color);
+            background-color: var(--primary-light);
+        }
+
+        .item-action-delete {
+            color: var(--danger-color);
+            background-color: #FFEBEE;
+        }
+
+        /* TAB 3: NEW BILL LAYOUT */
+        .step-label {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .step-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .customer-warning-banner {
+            background-color: #FFF3E0;
+            color: #E65100;
+            border: 1px solid #FFE0B2;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.4;
+            display: none;
+        }
+
+        .billing-item-dropdown {
+            max-height: 150px;
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 52px;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .search-dropdown-item {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #FAF9F9;
+            cursor: pointer;
+        }
+        .search-dropdown-item:active {
+            background-color: var(--primary-light);
+        }
+
+        .search-dropdown-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .search-dropdown-details {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .cart-wrapper {
+            background-color: var(--surface-color);
+            border-radius: 14px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .cart-placeholder {
+            padding: 20px 0;
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .cart-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #F5F5F5;
+            padding-bottom: 10px;
+        }
+        .cart-item-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .cart-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            margin-right: 8px;
+        }
+
+        .cart-item-name {
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .cart-item-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .cart-stepper {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+
+        .stepper-btn {
+            border: none;
+            background: none;
+            width: 38px;
+            height: 38px;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .stepper-btn:active {
+            background-color: #E8F5E9;
+        }
+
+        .stepper-value {
+            font-size: 14px;
+            font-weight: 800;
+            width: 28px;
+            text-align: center;
+        }
+
+        .cart-item-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-item-subtotal {
+            font-weight: 800;
+            font-size: 14px;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .cart-item-remove {
+            color: var(--danger-color);
+            background-color: #FFEBEE;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Preset measure chips and input forms */
+        .preset-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+            margin-bottom: 2px;
+        }
+
+        .preset-chip {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .preset-chip.active {
+            background-color: var(--primary-light);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+            box-shadow: 0 1px 3px rgba(46, 125, 50, 0.15);
+        }
+
+        .preset-chip:active {
+            transform: scale(0.95);
+        }
+
+        .custom-measure-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .custom-measure-input {
+            width: 76px;
+            height: 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .custom-measure-input:focus {
+            border-color: var(--primary-color);
+            background-color: var(--surface-color);
+        }
+
+        .custom-measure-unit {
+            height: 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .grand-total-banner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background-color: #ECEFF1;
+            border-radius: 12px;
+            font-weight: 800;
+        }
+
+        .grand-total-label {
+            font-size: 15px;
+            color: #37474F;
+        }
+
+        .grand-total-value {
+            font-size: 24px;
+            color: var(--primary-dark);
+        }
+
+        /* Payment toggle buttons styled like Cupertino segments */
+        .payment-status-container {
+            display: flex;
+            background-color: #E0E0E0;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .payment-toggle-btn {
+            flex: 1;
+            height: 48px;
+            background: none;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .payment-toggle-btn.active.paid {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .payment-toggle-btn.active.pending {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* TAB 4: BILL HISTORY LAYOUT */
+        .filter-segmented-bar {
+            display: flex;
+            background-color: var(--border-color);
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .filter-seg-btn {
+            flex: 1;
+            height: 40px;
+            border: none;
+            border-radius: 9px;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: none;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .filter-seg-btn.active {
+            background-color: var(--surface-color);
+            color: var(--primary-dark);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* TAB 5: PENDING DUES LAYOUT */
+        .pending-dues-header {
+            width: 100%;
+            padding: 16px;
+            background-color: #FFEBEE;
+            border-radius: 12px;
+            border-left: 5px solid var(--danger-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dues-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .dues-header-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #B71C1C;
+            text-transform: uppercase;
+        }
+
+        .dues-header-amount {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--danger-color);
+        }
+
+        .due-card {
+            border-left: 5px solid var(--danger-color);
+        }
+
+        .due-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .due-customer-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-color);
+        }
+
+        .due-bill-id {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .due-bill-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .due-amount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            border-top: 1px solid #FAFAFA;
+            padding-top: 10px;
+        }
+
+        .due-amount {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--danger-color);
+        }
+
+        /* FULL-SCREEN OVERLAY SHEET MODALS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.28s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-sheet {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+        }
+
+        .modal-overlay.active .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            height: 60px;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .modal-close-btn {
+            border: none;
+            background: none;
+            font-size: 26px;
+            color: var(--text-secondary);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Custom forms elements */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .form-control {
+            height: 48px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0 14px;
+            font-size: 15px;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+            width: 100%;
+        }
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        /* Success receipt screen styling */
+        .bill-success-card {
+            background-color: var(--surface-color);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .success-tick-circle {
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-size: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-heading {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .receipt-container {
+            background-color: #FFFDE7;
+            border: 1px dashed #CABF45;
+            border-radius: 8px;
+            padding: 16px;
+            width: 100%;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.02);
+            overflow-x: auto;
+        }
+
+        .receipt-content {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            text-align: left;
+            white-space: pre;
+            color: #3e3a10;
+        }
+
+        .modal-actions-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        /* Status colors */
+        .text-paid {
+            color: var(--primary-color);
+            font-weight: 800;
+        }
+
+        .text-pending {
+            color: var(--danger-color);
+            font-weight: 800;
+        }
+
+        /* Native-like visual alert banners */
+        .custom-toaster {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(30px);
+            background-color: rgba(33, 33, 33, 0.95);
+            color: #FFF;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .custom-toaster.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Material Input with icon */
+        .input-icon-wrapper {
+            position: relative;
+        }
+        .input-icon-wrapper .form-control {
+            padding-left: 44px;
+        }
+        .input-icon-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        /* Utility lists styles */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 16px;
+            color: var(--text-secondary);
+            gap: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+        }
+
+        .empty-state-title {
+            font-size: 16px;
+            font-weight: 800;
+        }
+    </style>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
+</head>
+<body>
+
+    <!-- Top Sticky Header -->
+    <header class="app-header">
+        <div class="header-title-container">
+            <span class="header-logo">🛒</span>
+            <div class="header-title">SmartKirana</div>
+        </div>
+        <div class="header-meta">
+            <div class="header-date" id="current-date">04/06/2026</div>
+            <button class="settings-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">🌙</button>
+        </div>
+    </header>
+
+    <!-- App Dynamic Tabs Area -->
+    <main class="app-content">
+
+        <!-- 1. DASHBOARD TAB VIEW -->
+        <section id="tab-dashboard" class="tab-panel active">
+            <!-- Dashboard Sub-Tabs -->
+            <div class="filter-segmented-bar" style="margin-bottom: 2px;">
+                <button class="filter-seg-btn active" id="dash-tab-btn-overview" onclick="switchDashboardSubTab('overview')">📊 Overview</button>
+                <button class="filter-seg-btn" id="dash-tab-btn-reports" onclick="switchDashboardSubTab('reports')">📑 Report</button>
+                <button class="filter-seg-btn" id="dash-tab-btn-expenses" onclick="switchDashboardSubTab('expenses')">💸 Expenses</button>
+            </div>
+
+            <!-- SUB-TAB 1: OVERVIEW -->
+            <div id="dash-content-overview" class="sub-tab-panel" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="dashboard-grid">
+                    <div class="card dashboard-card">
+                        <span class="dash-label">Today's Sales</span>
+                        <span class="dash-value" id="dash-today-sales">₹0.00</span>
+                    </div>
+                    <div class="card dashboard-card">
+                        <span class="dash-label">Pending Dues</span>
+                        <span class="dash-value text-pending" id="dash-pending-dues">₹0.00</span>
+                    </div>
+                    <div class="card dashboard-card">
+                        <span class="dash-label">Total Items</span>
+                        <span class="dash-value" id="dash-total-items">0</span>
+                    </div>
+                    <div class="card dashboard-card">
+                        <span class="dash-label">Low Stock</span>
+                        <span class="dash-value" id="dash-low-stock">0</span>
+                    </div>
+                </div>
+
+                <div class="recent-bills-header">
+                    <h3 class="recent-bills-title">Recent Bills</h3>
+                </div>
+                
+                <div class="recent-bills-list" id="dash-recent-bills" style="width: 100%;">
+                    <!-- Javascript will insert 5 most recent bills here -->
+                </div>
+            </div>
+
+            <!-- SUB-TAB 2: SALES REPORTS -->
+            <div id="dash-content-reports" class="sub-tab-panel" style="display: none; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="card" style="padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="font-size: 15px; margin: 0; color: var(--primary-dark);">Sales Summary</h3>
+                        <select id="report-period" onchange="generateSalesReport()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; background: var(--bg-color); color: var(--text-color); font-weight: bold;">
+                            <option value="daily">📅 Today's Report</option>
+                            <option value="weekly">📅 Weekly Report (7d)</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+                        <div style="background: var(--bg-color); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Total Sales</span>
+                            <span id="rep-total-sales" style="font-size: 15px; font-weight: 800; color: var(--primary-dark);">₹0.00</span>
+                        </div>
+                        <div style="background: var(--bg-color); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Net Profit</span>
+                            <span id="rep-net-profit" style="font-size: 15px; font-weight: 800; color: #1B5E20; font-weight: 900;">₹0.00</span>
+                        </div>
+                        <div style="background: var(--bg-color); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Cash (Paid)</span>
+                            <span id="rep-cash" style="font-size: 14px; font-weight: 700; color: #2E7D32;">₹0.00</span>
+                        </div>
+                        <div style="background: var(--bg-color); padding: 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 4px;">
+                            <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Credit (Dues)</span>
+                            <span id="rep-credit" style="font-size: 14px; font-weight: 700; color: #D32F2F;">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block;">Top 5 Sold Items</label>
+                        <div id="rep-top-items" style="display: flex; flex-direction: column; gap: 6px;">
+                            <!-- Dynamically loaded list of top 5 items -->
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="shareReportToWhatsApp()" style="width: 100%; height: 48px; border-radius: 12px; background-color: #2E7D32; color: white; border: none; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-size: 13px;">
+                        💬 Share Report via WhatsApp
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-TAB 3: EXPENSES -->
+            <div id="dash-content-expenses" class="sub-tab-panel" style="display: none; flex-direction: column; gap: 16px; width: 100%;">
+                <div class="card" style="padding: 16px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-color);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <span style="font-size: 11px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Total Month's Expenses</span>
+                            <h2 id="exp-total-amount" style="font-size: 22px; font-weight: 800; color: var(--danger-color); margin-top: 2px;">₹0.00</h2>
+                        </div>
+                        <button class="btn" onclick="openExpenseModal()" style="height: 40px; border-radius: 10px; background: var(--primary-light); color: var(--primary-dark); font-weight: bold; font-size: 13px; border: none; padding: 0 12px; cursor: pointer;">
+                            ➕ Add Expense
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; display: block;">Expenses Log</label>
+                        <div id="expenses-list" style="display: flex; flex-direction: column; gap: 8px; max-height: 42vh; overflow-y: auto; padding: 2px;">
+                            <!-- Dynamically loaded expenses -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 2. INVENTORY TAB VIEW -->
+        <section id="tab-inventory" class="tab-panel">
+            <!-- Suppliers and Low Stock triggers -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div onclick="openSuppliersModal()" style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Suppliers Hub</span>
+                        <span id="inv-suppliers-count" style="font-size: 13px; font-weight: 800; color: var(--primary-dark);">2 active</span>
+                    </div>
+                    <span style="font-size: 20px;">👥</span>
+                </div>
+                
+                <div onclick="openLowStockReorderModal()" style="background: #FFF3E0; border: 1px solid #FFE0B2; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span style="font-size: 10px; font-weight: bold; color: #E65100; text-transform: uppercase;">Low Stock Warning</span>
+                        <span id="inv-lowstock-alert-lbl" style="font-size: 13px; font-weight: 800; color: #F57C00;">0 items</span>
+                    </div>
+                    <span style="font-size: 20px;">⚠️</span>
+                </div>
+            </div>
+
+            <div class="search-add-bar" style="gap: 8px;">
+                <div class="input-search-container" style="flex: 1;">
+                    <span class="search-prefix-icon">🔍</span>
+                    <input type="text" class="input-search" id="inventory-search" placeholder="Search item name..." oninput="filterInventoryList()">
+                </div>
+                <!-- AI Smart Bill Scanner integration -->
+                <button class="btn" type="button" onclick="triggerReceiptScan()" style="height: 48px; border-radius: 12px; background: linear-gradient(135deg, #1976D2 0%, #0d47a1 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; font-size: 13px; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 2px 4px rgba(25,118,210,0.2);" aria-label="AI Scan Bill">
+                    <span>📸</span> <span class="ai-scan-btn-lbl">AI Scan</span>
+                </button>
+                <input type="file" id="ai-bill-file-input" accept="image/*" style="display: none;" onchange="handleAiBillScanSelected(event)">
+                
+                <button class="btn btn-add-item" onclick="openAddInventoryModal()" aria-label="Add New Item">➕</button>
+            </div>
+
+            <div class="inventory-scroll-container" id="inventory-list">
+                <!-- Javascript renders inventory cards -->
+            </div>
+        </section>
+
+
+        <!-- 3. NEW BILL TAB VIEW -->
+        <section id="tab-new-bill" class="tab-panel">
+            
+            <!-- Step 1: Customer Details -->
+            <div class="step-section">
+                <label class="step-label" for="bill-customer-name">Step 1: Customer Details</label>
+                <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                    <div class="input-icon-wrapper">
+                        <span class="input-icon-icon">👤</span>
+                        <input type="text" id="bill-customer-name" class="form-control" placeholder="Enter customer name..." onblur="checkCustomerPendingDues(this.value)">
+                    </div>
+                    <div class="input-icon-wrapper">
+                        <span class="input-icon-icon">📞</span>
+                        <input type="tel" id="bill-customer-phone" class="form-control" placeholder="Optional: 10-digit Phone for WhatsApp...">
+                    </div>
+                </div>
+                <div class="customer-warning-banner" id="bill-customer-warning">
+                    <!-- Dynamic Alert: e.g. "⚠️ Customer has pending dues of ₹X!" -->
+                </div>
+            </div>
+
+            <!-- Step 2: Item Selection Search bar -->
+            <div class="step-section" style="position: relative;">
+                <label class="step-label" for="bill-item-search">Step 2: Add Items to Cart</label>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <div class="input-icon-wrapper" style="flex: 1;">
+                        <span class="input-icon-icon">🔍</span>
+                        <input type="text" id="bill-item-search" class="form-control" placeholder="Search inventory items..." oninput="searchCheckoutItems(this.value)">
+                    </div>
+                    <!-- Barcode Scan trigger -->
+                    <button class="btn" type="button" onclick="toggleBarcodeScanner()" style="height: 48px; width: 50px; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; border-radius: 12px; border: none; cursor: pointer;" aria-label="Scan Barcode">
+                        📸
+                    </button>
+                </div>
+                
+                <!-- Barcode Camera & Simulator viewport area -->
+                <div id="barcode-scanner-area" style="display: none; background: var(--surface-color); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); margin-top: 8px; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">Camera Barcode Scanner</span>
+                        <button type="button" onclick="toggleBarcodeScanner()" style="border: none; background: none; font-size: 18px; color: var(--danger-color); font-weight: bold; cursor: pointer;">×</button>
+                    </div>
+                    <!-- Reader viewport -->
+                    <div id="barcode-reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #222;"></div>
+                    
+                    <!-- Manual mock / Simulator input for easy testing in Android development (vital redundancy!) -->
+                    <div style="border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 4px;">
+                        <label style="font-size: 10px; font-weight: bold; color: var(--text-secondary); display: block; margin-bottom: 4px; text-transform: uppercase;">Barcode Gun Simulator (Manual input)</label>
+                        <div style="display: flex; gap: 6px;">
+                            <input type="text" id="barcode-manual-input" class="form-control" style="flex: 1; height: 38px; font-size: 12px;" placeholder="Type / paste barcode (e.g. 1001)...">
+                            <button type="button" onclick="handleManualBarcodeScanned()" style="height: 38px; background: var(--primary-dark); color: white; border: none; padding: 0 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer;">Scan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dropdown lists search matches -->
+                <div class="billing-item-dropdown" id="bill-search-results">
+                    <!-- Dynamically populated search items -->
+                </div>
+            </div>
+
+            <!-- Step 3: Cart Visual Listing -->
+            <div class="step-section">
+                <label class="step-label">Step 3: Cart Items</label>
+                <div class="cart-wrapper">
+                    <div id="cart-items-list">
+                        <div class="cart-placeholder">Cart is currently empty. Tap items in Step 2 to add.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 & 5: Bottom sticky checkout summary -->
+            <div class="step-section">
+                <div class="grand-total-banner">
+                    <span class="grand-total-label">Grand Total</span>
+                    <span class="grand-total-value" id="cart-grand-total">₹0.00</span>
+                </div>
+            </div>
+
+            <!-- Step 5: Payment Status segments -->
+            <div class="step-section">
+                <label class="step-label">Step 4: Select Payment Mode</label>
+                <div class="payment-status-container">
+                    <button type="button" class="payment-toggle-btn active paid" id="pay-btn-paid" onclick="setCheckoutPaymentMode('Paid')">
+                        <span>✓</span> Paid
+                    </button>
+                    <button type="button" class="payment-toggle-btn pending" id="pay-btn-pending" onclick="setCheckoutPaymentMode('Pending')">
+                        <span>⏳</span> Pending
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 6: Trigger submission action -->
+            <button class="btn btn-primary btn-block" style="margin-top: 8px;" onclick="submitGenerateBill()">
+                🛒 Generate Bill Receipt
+            </button>
+            <div style="height: 20px;"></div>
+        </section>
+
+
+        <!-- 4. BILL HISTORY TAB VIEW -->
+        <section id="tab-history" class="tab-panel">
+            <div class="input-search-container">
+                <span class="search-prefix-icon">🔍</span>
+                <input type="text" class="input-search" id="history-search" placeholder="Search customer name..." oninput="renderHistory()">
+            </div>
+
+            <div class="filter-segmented-bar">
+                <button class="filter-seg-btn active" id="hist-filter-all" onclick="setHistoryFilter('All')">All</button>
+                <button class="filter-seg-btn" id="hist-filter-paid" onclick="setHistoryFilter('Paid')">Paid</button>
+                <button class="filter-seg-btn" id="hist-filter-pending" onclick="setHistoryFilter('Pending')">Pending</button>
+            </div>
+
+            <div class="inventory-scroll-container" id="history-list-container">
+                <!-- Javascript will load the full historic listings -->
+            </div>
+        </section>
+
+
+        <!-- 5. PENDING DUES TAB VIEW -->
+        <section id="tab-dues" class="tab-panel">
+            <div class="pending-dues-header">
+                <div class="dues-header-text">
+                    <span class="dues-header-label">Total Pending Sales</span>
+                    <span class="dues-header-amount" id="sum-outstanding-dues">₹0.00</span>
+                </div>
+                <span style="font-size: 28px;">⏳</span>
+            </div>
+
+            <div class="inventory-scroll-container" id="dues-list-container" style="flex: 1;">
+                <!-- Dynamically loaded list of unpaid pending bills -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Iconized Navigation Panel -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('dashboard')" data-tab="dashboard">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('inventory')" data-tab="inventory">
+            <span class="nav-icon">📦</span>
+            <span class="nav-label">Inventory</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('new-bill')" data-tab="new-bill">
+            <span class="nav-icon">➕</span>
+            <span class="nav-label">New Bill</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('history')" data-tab="history">
+            <span class="nav-icon">📋</span>
+            <span class="nav-label">History</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('dues')" data-tab="dues">
+            <span class="nav-icon">💵</span>
+            <span class="nav-label">Dues</span>
+        </button>
+    </nav>
+
+
+    <!-- --- OVERLAY SHEET MODALS --- -->
+
+    <!-- Modal 1: Add or Edit Inventory Item Modal Sheet -->
+    <div class="modal-overlay" id="modal-item-form">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title" id="item-form-title">Add New Item</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-item-form')">×</button>
+            </header>
+            <div class="modal-body">
+                <input type="hidden" id="form-item-id">
+                
+                <div class="form-group">
+                    <label class="form-label" for="form-item-name">Item Name *</label>
+                    <input type="text" id="form-item-name" class="form-control" placeholder="e.g. Basmati Rice Premium">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="form-item-category">Category</label>
+                    <select id="form-item-category" class="form-control">
+                        <option value="Grains">Grains</option>
+                        <option value="Dairy">Dairy</option>
+                        <option value="Snacks">Snacks</option>
+                        <option value="Beverages">Beverages</option>
+                        <option value="Vegetables">Vegetables</option>
+                        <option value="Fruits">Fruits</option>
+                        <option value="Household">Household</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="form-label" for="form-item-quantity">Quantity</label>
+                        <input type="number" id="form-item-quantity" class="form-control" value="0" min="0">
+                    </div>
+                    <div>
+                        <label class="form-label" for="form-item-unit">Unit Type</label>
+                        <select id="form-item-unit" class="form-control">
+                            <option value="kg">kg</option>
+                            <option value="litre">litre</option>
+                            <option value="piece">piece</option>
+                            <option value="packet">packet</option>
+                            <option value="dozen">dozen</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="form-item-price">Price per Unit (₹) *</label>
+                    <input type="number" id="form-item-price" class="form-control" placeholder="e.g. 110" min="0" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="form-item-threshold">Low Stock Warning Limit</label>
+                    <input type="number" id="form-item-threshold" class="form-control" value="5" min="0">
+                </div>
+
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label class="form-label" for="form-item-barcode">Barcode ID</label>
+                        <input type="text" id="form-item-barcode" class="form-control" placeholder="e.g. 1009" style="font-size: 12px;">
+                    </div>
+                    <div>
+                        <label class="form-label" for="form-item-supplier">Supplier</label>
+                        <select id="form-item-supplier" class="form-control" style="font-size: 12px;">
+                            <option value="">-- No Supplier --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block" style="margin-top: 12px;" onclick="saveItemForm()">
+                    💾 Confirm & Save Item
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 2: Success Receipt & Thermal Print View Modal -->
+    <div class="modal-overlay" id="modal-bill-success">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title">Receipt Review</h3>
+                <button class="modal-close-btn" onclick="closeModalAndResetBill()">×</button>
+            </header>
+            <div class="modal-body">
+                
+                <div class="bill-success-card">
+                    <div class="success-tick-circle">✓</div>
+                    <span class="success-heading" id="success-prompt-heading">Receipt Generated !</span>
+                    <span style="font-size: 13px; color: var(--text-secondary);" id="success-prompt-sub">A copy has been recorded to your history archives.</span>
+                </div>
+
+                <div class="receipt-container">
+                    <pre class="receipt-content" id="thermal-receipt-text">
+================================
+          SMARTKIRANA           
+================================
+                    </pre>
+                </div>
+
+                <div class="modal-actions-container">
+                    <button class="btn btn-secondary" onclick="copyReceiptTextToClipboard()">
+                        📋 Copy Receipt
+                    </button>
+                    <button class="btn btn-primary" onclick="shareReceiptToWhatsApp()">
+                        💬 WhatsApp
+                    </button>
+                </div>
+
+                <button class="btn btn-primary btn-block" style="background-color: #37474F;" onclick="closeModalAndResetBill()">
+                    🆕 Begin New Transaction
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 3: Bill History Detailed Overlay Explorer -->
+    <div class="modal-overlay" id="modal-bill-explorer">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title" id="explorer-title">Bill Details</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-bill-explorer')">×</button>
+            </header>
+            <div class="modal-body">
+                <div class="receipt-container">
+                    <pre class="receipt-content" id="explorer-receipt-text"></pre>
+                </div>
+
+                <div class="modal-actions-container">
+                    <button class="btn btn-secondary" onclick="copyReceiptTextFromExplorer()">
+                        📋 Copy text
+                    </button>
+                    <button class="btn btn-primary" onclick="shareReceiptFromExplorer()">
+                        💬 Share on WhatsApp
+                    </button>
+                </div>
+
+                <button class="btn btn-block btn-danger" id="explorer-delete-bill-btn">
+                    🗑️ Void/Delete This Bill
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 4: AI Scanned Items Review & Edit -->
+    <div class="modal-overlay" id="modal-scanned-items" style="z-index: 1050;">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title">Review Scanned Items</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-scanned-items')">×</button>
+            </header>
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; font-weight: 500;">
+                    Review, tweak, or edit the items parsed by Gemini AI from your paper bill before adding them directly into the inventory.
+                </p>
+                
+                <div id="scanned-items-list-container" style="display: flex; flex-direction: column; gap: 12px; max-height: 48vh; overflow-y: auto; padding: 4px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 16px; background: var(--bg-color);">
+                    <!-- Inside this container, list of cards representing parsed products -->
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 12px;">
+                    <button class="btn btn-secondary" style="flex: 1; height: 48px; font-weight: bold; border-radius: 12px;" onclick="closeModal('modal-scanned-items')">Cancel</button>
+                    <button class="btn btn-primary" style="flex: 1; height: 48px; font-weight: 800; border-radius: 12px; background: var(--primary-color);" onclick="confirmAddScannedItems()">Save All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 5: Suppliers Management Hub -->
+    <div class="modal-overlay" id="modal-suppliers" style="z-index: 1045;">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title">Suppliers Directory</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-suppliers')">×</button>
+            </header>
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary);">Manage wholesaling partners & credit balances</span>
+                    <button class="btn" onclick="openAddSupplierForm()" style="height: 36px; padding: 0 10px; font-size: 11px; background-color: var(--primary-light); color: var(--primary-dark); border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+                        ➕ Add Partner
+                    </button>
+                </div>
+
+                <!-- Add/Edit form, hidden toggled inline -->
+                <div id="supplier-editor-form" style="display: none; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+                    <h4 style="font-size: 12px; margin-bottom: 8px; color: var(--primary-dark);" id="sup-form-title">New Supplier Profile</h4>
+                    <input type="hidden" id="form-sup-id">
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <input type="text" id="form-sup-name" class="form-control" placeholder="Supplier Company/Person Name *" style="height: 38px; font-size: 12px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <input type="tel" id="form-sup-phone" class="form-control" placeholder="WhatsApp / Phone number" style="height: 38px; font-size: 12px;">
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="closeSupplierFormInline()" style="flex: 1; height: 36px; font-size: 12px; border-radius: 8px;">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveSupplierFormInline()" style="flex: 1; height: 36px; font-size: 12px; border-radius: 8px;">Save Profile</button>
+                    </div>
+                </div>
+
+                <!-- Record Purchase/Payment form toggled inline -->
+                <div id="supplier-ledger-form" style="display: none; background: #FFEBEE; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+                    <h4 style="font-size: 12px; margin-bottom: 8px; color: var(--danger-color);" id="sub-ledger-title">Record Payment / Invoice</h4>
+                    <input type="hidden" id="ledger-sup-id">
+                    <select id="ledger-type" class="form-control" style="height: 38px; font-size: 11px; margin-bottom: 8px;" onchange="toggleLedgerPurchaseFields()">
+                        <option value="payment">💸 Record Cash Payment (Decreases Dues)</option>
+                        <option value="purchase">📥 Record Credit Purchase (Increases Dues)</option>
+                    </select>
+                    <!-- Purchase specific field -->
+                    <div class="form-group" id="ledger-desc-group" style="margin-bottom: 8px;">
+                        <input type="text" id="ledger-desc" class="form-control" placeholder="Invoice reference (e.g. bulk wheat restocking)" style="height: 38px; font-size: 11px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <input type="number" id="ledger-amount" class="form-control" placeholder="Amount (₹) *" style="height: 38px; font-size: 11px;">
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="closeSupplierLedgerInline()" style="flex: 1; height: 36px; font-size: 11px; border-radius: 8px;">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveSupplierLedgerInline()" style="flex: 1; height: 36px; font-size: 11px; border-radius: 8px; background: var(--danger-color);">Confirm Transaction</button>
+                    </div>
+                </div>
+
+                <!-- Suppliers Directory List Container -->
+                <div id="suppliers-list-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 48vh; overflow-y: auto;">
+                    <!-- Filled dynamically with cards -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 6: Record New Expense -->
+    <div class="modal-overlay" id="modal-expense" style="z-index: 1040;">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title">Record New Expense</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-expense')">×</button>
+            </header>
+            <div class="modal-body">
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                   Deduct operating costs (rent, dues, helper salaries, electric bills) from overall sales to inspect net business earnings.
+                </p>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" for="expense-desc">Expense Description *</label>
+                    <input type="text" id="expense-desc" class="form-control" placeholder="e.g. Monthly Shop Rent">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" for="expense-category">Category</label>
+                    <select id="expense-category" class="form-control">
+                        <option value="Rent">Rent</option>
+                        <option value="Salary">Staff Salary</option>
+                        <option value="Bills">Electricity / Water Bills</option>
+                        <option value="Inventory Purchase">Inventory Purchase/Restock</option>
+                        <option value="Misc">Miscellaneous / Others</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label" for="expense-amount">Amount (₹) *</label>
+                    <input type="number" id="expense-amount" class="form-control" placeholder="Enter amount..." min="0">
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-secondary" style="flex: 1; height: 48px; border-radius: 12px; font-weight: bold;" onclick="closeModal('modal-expense')">Cancel</button>
+                    <button class="btn btn-primary" style="flex: 1; height: 48px; border-radius: 12px; font-weight: 800; background: var(--danger-color);" onclick="submitExpenseForm()">Save Expense</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 7: Low Stock Alerts & Automated Reorder Generator -->
+    <div class="modal-overlay" id="modal-low-stock" style="z-index: 1042;">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title">Low Stock Reorder Tool</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-low-stock')">×</button>
+            </header>
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; font-weight: 500;">
+                    These catalog items are below their specified thresholds. We've grouped them by supplier profile to generate instant reorder lists you can dispatch via WhatsApp!
+                </p>
+
+                <div id="low-stock-grouped-container" style="display: flex; flex-direction: column; gap: 14px; max-height: 52vh; overflow-y: auto; padding: 4px; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 12px; background: var(--bg-color);">
+                    <!-- Dynamic blocks grouped by suppliers -->
+                </div>
+
+                <button class="btn btn-secondary btn-block" style="border-radius: 12px; height: 46px; font-weight: bold;" onclick="closeModal('modal-low-stock')">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Global Loading Overlay for AI processes -->
+    <div id="ai-loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: 1100; flex-direction: column; align-items: center; justify-content: center; color: white;">
+        <div class="scrolling-loader" style="width: 50px; height: 50px; border: 4px solid rgba(255, 255, 255, 0.25); border-top-color: #1976D2; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px;"></div>
+        <div style="font-size: 16px; font-weight: 800; text-align: center; max-width: 80%; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">Scanning Receipt with AI...</div>
+        <div style="font-size: 12px; color: #CCCCCC; margin-top: 6px; text-align: center; max-width: 80%;">Extracting products, units & rates using Gemini...</div>
+    </div>
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @media (max-width: 360px) {
+            .ai-scan-btn-lbl {
+                display: none;
+            }
+        }
+    </style>
+
+
+    <!-- Alert Notification / Customized Toaster -->
+    <div class="custom-toaster" id="toaster">
+        <span id="toaster-text">Notification message</span>
+    </div>
+
+
+    <!-- JS CLIENT LOGIC ENGINE -->
+    <script>
+        // Database arrays referenced globally
+        let inventory = [];
+        let bills = [];
+        let suppliers = [];
+        let expenses = [];
+        
+        // Cart local cache
+        let cart = [];
+        let checkoutPaymentStatus = 'Paid'; // defaults
+        let activeHistoryFilter = 'All'; // defaults
+        let activeExplorerBill = null; // tracking active bill selected for share
+
+        // Touch gesture analytics swipe-to-delete variables
+        let touchStartX = 0;
+        let touchCurrentX = 0;
+        let swipedElement = null;
+
+        // Date init (Set dynamic display date on app landing frame)
+        function updateDateHeader() {
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            const dateStr = `${d}/${m}/${y}`;
+            document.getElementById('current-date').textContent = dateStr;
+            return dateStr;
+        }
+
+        // Display quick Toast Alert without blocker
+        function showToast(message) {
+            const toaster = document.getElementById('toaster');
+            document.getElementById('toaster-text').textContent = message;
+            toaster.classList.add('show');
+            setTimeout(() => {
+                toaster.classList.remove('show');
+            }, 2500);
+        }
+
+        // Local Storage Sync Utilities
+        function fetchDatabase() {
+            const localInventory = localStorage.getItem('sk_inventory');
+            const localBills = localStorage.getItem('sk_bills');
+            const localSuppliers = localStorage.getItem('sk_suppliers');
+            const localExpenses = localStorage.getItem('sk_expenses');
+
+            if (localInventory) {
+                inventory = JSON.parse(localInventory);
+            } else {
+                // Seed 8 baseline premium items 
+                inventory = [
+                    { id: 'inv_1001', name: "Basmati Rice Premium", category: "Grains", qty: 25, unit: "kg", price: 110, threshold: 5, barcode: "1001", supplierId: "sup_1" },
+                    { id: 'inv_1002', name: "Amul Butter Pack", category: "Dairy", qty: 12, unit: "piece", price: 55, threshold: 4, barcode: "1002", supplierId: "sup_2" },
+                    { id: 'inv_1003', name: "Full Cream Milk 1L", category: "Dairy", qty: 2, unit: "litre", price: 66, threshold: 8, barcode: "1003", supplierId: "sup_2" },
+                    { id: 'inv_1004', name: "Parle-G Cookies Max", category: "Snacks", qty: 45, unit: "packet", price: 10, threshold: 10, barcode: "1004", supplierId: "sup_1" },
+                    { id: 'inv_1005', name: "Coca Cola Bottle 1.25L", category: "Beverages", qty: 15, unit: "piece", price: 70, threshold: 5, barcode: "1005" },
+                    { id: 'inv_1006', name: "Fresh Potatoes Select", category: "Vegetables", qty: 30, unit: "kg", price: 30, threshold: 10, barcode: "1006" },
+                    { id: 'inv_1007', name: "Fresh Gala Apples 1kg", category: "Fruits", qty: 3, unit: "kg", price: 180, threshold: 5, barcode: "1007" },
+                    { id: 'inv_1008', name: "Vim Dishwash Liquid", category: "Household", qty: 8, unit: "piece", price: 99, threshold: 3, barcode: "1008" }
+                ];
+                saveInventory();
+            }
+
+            if (localBills) {
+                bills = JSON.parse(localBills);
+            } else {
+                bills = [];
+                saveBills();
+            }
+
+            if (localSuppliers) {
+                suppliers = JSON.parse(localSuppliers);
+            } else {
+                // Seed some wholesale suppliers
+                suppliers = [
+                    { id: 'sup_1', name: "Raju Grocery Wholesalers", phone: "9876543210", dues: 4500, outstandingHistory: [{ date: "2026-06-01", desc: "Basmati Rice bulk restocking", amount: 4500 }] },
+                    { id: 'sup_2', name: "Amul Dairy Distributors", phone: "9812345678", dues: 0, outstandingHistory: [] }
+                ];
+                saveSuppliers();
+            }
+
+            if (localExpenses) {
+                expenses = JSON.parse(localExpenses);
+            } else {
+                // Seed default store expenses (shop rent, assistant salary, electric utility bill)
+                expenses = [
+                    { id: 'exp_1', desc: "May Shop Rent", category: "Rent", amount: 12000, date: "2026-05-31" },
+                    { id: 'exp_2', desc: "Electricity Bill May", category: "Bills", amount: 3500, date: "2026-06-02" },
+                    { id: 'exp_3', desc: "Staff Helper Salary", category: "Salary", amount: 8000, date: "2026-06-03" }
+                ];
+                saveExpenses();
+            }
+        }
+
+        function saveInventory() {
+            localStorage.setItem('sk_inventory', JSON.stringify(inventory));
+        }
+
+        function saveBills() {
+            localStorage.setItem('sk_bills', JSON.stringify(bills));
+        }
+
+        function saveSuppliers() {
+            localStorage.setItem('sk_suppliers', JSON.stringify(suppliers));
+        }
+
+        function saveExpenses() {
+            localStorage.setItem('sk_expenses', JSON.stringify(expenses));
+        }
+
+        // Global Form Modal Sheet Opening Utility
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // --- TAB SWITCHER ENGINE ---
+        function switchTab(tabName) {
+            // Unset current actives
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+
+            // Set new active selections
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.querySelector(`.nav-item[data-tab="${tabName}"]`).classList.add('active');
+
+            // Dispatch content loading hooks
+            if (tabName === 'dashboard') {
+                renderDashboard();
+            } else if (tabName === 'inventory') {
+                renderInventory();
+            } else if (tabName === 'new-bill') {
+                // Cart resets automatically if we want to retain it we don't clear
+            } else if (tabName === 'history') {
+                renderHistory();
+            } else if (tabName === 'dues') {
+                renderDues();
+            }
+        }
+
+
+        // ==========================================
+        // 1. DASHBOARD CONTROLLER ENGINE
+        // ==========================================
+        function renderDashboard() {
+            updateDateHeader();
+            
+            // Calculate Today's Date
+            const todayStr = updateDateHeader();
+
+            // Total Sales for Today (Sum total amount of all bills from today with "Paid" status)
+            const salesToday = bills
+                .filter(b => b.date === todayStr && b.status === 'Paid')
+                .reduce((sum, b) => sum + b.total, 0);
+
+            // Total outstanding dues cumulative
+            const pendingDues = bills
+                .filter(b => b.status === 'Pending')
+                .reduce((sum, b) => sum + b.total, 0);
+
+            // Distinct list size
+            const totalDistinct = inventory.length;
+
+            // Count of stock items equal or below target limit
+            const lowStockCount = inventory.filter(item => Number(item.qty) <= Number(item.threshold)).length;
+
+            // DOM Insertion
+            document.getElementById('dash-today-sales').textContent = `₹${salesToday.toFixed(0)}`;
+            document.getElementById('dash-pending-dues').textContent = `₹${pendingDues.toFixed(0)}`;
+            document.getElementById('dash-total-items').textContent = totalDistinct;
+            
+            const lowStockVal = document.getElementById('dash-low-stock');
+            lowStockVal.textContent = lowStockCount;
+            if (lowStockCount > 0) {
+                lowStockVal.classList.add('low-stock');
+                lowStockVal.textContent = `${lowStockCount} ⚠️`;
+            } else {
+                lowStockVal.classList.remove('low-stock');
+            }
+
+            // Sync dynamic trigger badges
+            const supBadge = document.getElementById('inv-suppliers-count');
+            if (supBadge) supBadge.textContent = `${suppliers.length} active`;
+
+            const lowBadge = document.getElementById('inv-lowstock-alert-lbl');
+            if (lowBadge) lowBadge.textContent = `${lowStockCount} items`;
+
+            // Auto-refresh respective active dashboard subtab visualizations
+            if (activeDashSubTab === 'reports') {
+                generateSalesReport();
+            } else if (activeDashSubTab === 'expenses') {
+                renderExpensesLog();
+            }
+
+            // Load top 5 recent bills inside dashboard overview
+            const recentContainer = document.getElementById('dash-recent-bills');
+            
+            if (bills.length === 0) {
+                recentContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">No bills created yet</div>
+                        <span style="font-size:12px;color:var(--text-secondary);">Go to New Bill tab to issue invoices</span>
+                    </div>
+                `;
+                return;
+            }
+
+            // Slice top 5 newest first
+            const recent = [...bills].reverse().slice(0, 5);
+            recentContainer.innerHTML = recent.map(bill => {
+                const statusBadge = bill.status === 'Paid' 
+                    ? `<span class="badge badge-success">Paid</span>` 
+                    : `<span class="badge badge-danger">Pending</span>`;
+                
+                const pendingCardClass = bill.status === 'Pending' ? 'status-pending' : '';
+
+                return `
+                    <div class="bill-sm-card ${pendingCardClass}" onclick="openBillExplorer('${bill.id}')">
+                        <div class="bill-sm-left">
+                            <span class="bill-sm-name">${escapeMarkup(bill.customerName)}</span>
+                            <span class="bill-sm-date">${bill.id} | ${bill.date}</span>
+                        </div>
+                        <div class="bill-sm-right">
+                            <span class="bill-sm-total">₹${bill.total.toFixed(2)}</span>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        // ==========================================
+        // 2. INVENTORY CONTROLLER ENGINE
+        // ==========================================
+        function renderInventory() {
+            const container = document.getElementById('inventory-list');
+            const searchVal = document.getElementById('inventory-search').value.toLowerCase().trim();
+
+            let matched = inventory;
+            if (searchVal !== '') {
+                matched = inventory.filter(item => item.name.toLowerCase().includes(searchVal));
+            }
+
+            if (matched.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">No search matches found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Build card iterations with Swipe Delete Support
+            container.innerHTML = matched.map(item => {
+                const isLow = Number(item.qty) <= Number(item.threshold);
+                const lowAlertClass = isLow ? 'low-stock-alert' : '';
+
+                return `
+                    <div class="card-item-container" id="cont-${item.id}">
+                        <!-- Hidden Swipe Action Background -->
+                        <div class="swipe-background-delete" onclick="triggerDirectDelete('${item.id}', event)">
+                            <div class="swipe-trash-icon">🗑️</div>
+                            <div class="swipe-delete-label">Delete</div>
+                        </div>
+                        
+                        <!-- Primary Inventory Render Foreground -->
+                        <div class="inventory-card ${lowAlertClass}" 
+                             data-item-id="${item.id}"
+                             ontouchstart="handleSwipeStart(event, this)"
+                             ontouchmove="handleSwipeMove(event, this)"
+                             ontouchend="handleSwipeEnd(event, this)">
+                             
+                            <div class="inv-card-hdr">
+                                <div>
+                                    <h4 class="inv-card-name">${escapeMarkup(item.name)}</h4>
+                                    <span class="inv-card-category">${item.category}</span>
+                                </div>
+                                <span class="badge ${isLow ? 'badge-danger' : 'badge-success'}">
+                                    ${isLow ? 'Low Stock' : 'Good Stock'}
+                                </span>
+                            </div>
+                            
+                            <div class="inv-card-row">
+                                <div class="inv-card-unit-price">
+                                    ₹${Number(item.price).toFixed(2)} <span style="font-size:11px;font-weight:normal;color:var(--text-secondary);">per ${item.unit}</span>
+                                </div>
+                                <div class="inv-card-stock" style="color: ${isLow ? 'var(--danger-color)' : 'var(--text-color)'};">
+                                    Stock: <span>${item.qty} ${item.unit}</span>
+                                    ${isLow ? ` <small>(Limit ${item.threshold})</small>` : ''}
+                                </div>
+                            </div>
+
+                            <div class="inv-card-actions">
+                                <button type="button" class="item-action-btn item-action-edit" onclick="triggerEditItem('${item.id}', event)">
+                                    ✏️ Edit
+                                </button>
+                                <button type="button" class="item-action-btn item-action-delete" onclick="triggerDirectDelete('${item.id}', event)">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterInventoryList() {
+            renderInventory();
+        }
+
+        // --- SWIPE GESTURE DETECTORS ---
+        function handleSwipeStart(e, element) {
+            // Record anchor coordinate
+            touchStartX = e.touches[0].clientX;
+            element.style.transition = 'none';
+            swipedElement = element;
+        }
+
+        function handleSwipeMove(e, element) {
+            if (swipedElement !== element) return;
+            touchCurrentX = e.touches[0].clientX;
+            const diffX = touchCurrentX - touchStartX;
+            
+            // Allow left translate, up to -100px. Deny right translate
+            if (diffX < 0) {
+                const val = Math.max(diffX, -100);
+                element.style.transform = `translateX(${val}px)`;
+            } else {
+                element.style.transform = `translateX(0px)`;
+            }
+        }
+
+        function handleSwipeEnd(e, element) {
+            if (swipedElement !== element) return;
+            element.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+            const diffX = touchCurrentX - touchStartX;
+
+            // If translate is negative enough, lock open at swipe delete panel size (-90px)
+            if (diffX < -50) {
+                element.style.transform = `translateX(-90px)`;
+            } else {
+                element.style.transform = `translateX(0)`;
+            }
+            swipedElement = null;
+        }
+
+        // Form actions logic
+        function populateSupplierDropdown() {
+            const dropdown = document.getElementById('form-item-supplier');
+            if (!dropdown) return;
+            dropdown.innerHTML = '<option value="">-- No Supplier --</option>';
+            suppliers.forEach(sup => {
+                const opt = document.createElement('option');
+                opt.value = sup.id;
+                opt.textContent = sup.name;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        function openAddInventoryModal() {
+            document.getElementById('item-form-title').textContent = "Add New Item";
+            document.getElementById('form-item-id').value = "";
+            document.getElementById('form-item-name').value = "";
+            document.getElementById('form-item-category').value = "Grains";
+            document.getElementById('form-item-quantity').value = "0";
+            document.getElementById('form-item-unit').value = "kg";
+            document.getElementById('form-item-price').value = "";
+            document.getElementById('form-item-threshold').value = "5";
+            
+            populateSupplierDropdown();
+            document.getElementById('form-item-barcode').value = "";
+            document.getElementById('form-item-supplier').value = "";
+
+            openModal('modal-item-form');
+        }
+
+        function triggerEditItem(itemId, event) {
+            if (event) event.stopPropagation(); // Avoid triggering any background element click
+            
+            const item = inventory.find(i => i.id === itemId);
+            if (!item) return;
+
+            document.getElementById('item-form-title').textContent = "Edit Item";
+            document.getElementById('form-item-id').value = item.id;
+            document.getElementById('form-item-name').value = item.name;
+            document.getElementById('form-item-category').value = item.category;
+            document.getElementById('form-item-quantity').value = item.qty;
+            document.getElementById('form-item-unit').value = item.unit;
+            document.getElementById('form-item-price').value = item.price;
+            document.getElementById('form-item-threshold').value = item.threshold;
+
+            populateSupplierDropdown();
+            document.getElementById('form-item-barcode').value = item.barcode || "";
+            document.getElementById('form-item-supplier').value = item.supplierId || "";
+
+            openModal('modal-item-form');
+        }
+
+        function saveItemForm() {
+            const id = document.getElementById('form-item-id').value;
+            const name = document.getElementById('form-item-name').value.trim();
+            const category = document.getElementById('form-item-category').value;
+            const qty = Number(document.getElementById('form-item-quantity').value);
+            const unit = document.getElementById('form-item-unit').value;
+            const priceVal = document.getElementById('form-item-price').value;
+            const threshold = Number(document.getElementById('form-item-threshold').value);
+            const barcode = document.getElementById('form-item-barcode').value.trim();
+            const supplierId = document.getElementById('form-item-supplier').value;
+
+            if (!name) {
+                showToast("⚠️ Item Name is required");
+                return;
+            }
+            if (!priceVal || isNaN(Number(priceVal)) || Number(priceVal) < 0) {
+                showToast("⚠️ Valid Unit Price is required");
+                return;
+            }
+
+            const price = Number(priceVal);
+
+            if (id === "") {
+                // Generate a random ID with unique prefix 
+                const newId = 'inv_' + Date.now() + '_' + Math.floor(Math.random() * 100);
+                inventory.unshift({ id: newId, name, category, qty, unit, price, threshold, barcode, supplierId });
+                showToast(`📦 Item "${name}" created !`);
+            } else {
+                const targetIdx = inventory.findIndex(i => i.id === id);
+                if (targetIdx !== -1) {
+                    inventory[targetIdx] = { id, name, category, qty, unit, price, threshold, barcode, supplierId };
+                    showToast(`✏️ Item "${name}" updated !`);
+                }
+            }
+
+            saveInventory();
+            closeModal('modal-item-form');
+            renderInventory();
+        }
+
+        // ==========================================
+        // 1B. SUB-TABS & EXPENSE TRACKER & REPORTS LOGIC
+        // ==========================================
+        let activeDashSubTab = 'overview';
+        function switchDashboardSubTab(subTab) {
+            activeDashSubTab = subTab;
+            document.querySelectorAll('.sub-tab-panel').forEach(panel => panel.style.display = 'none');
+            document.getElementById('dash-tab-btn-overview').classList.remove('active');
+            document.getElementById('dash-tab-btn-reports').classList.remove('active');
+            document.getElementById('dash-tab-btn-expenses').classList.remove('active');
+
+            if (subTab === 'overview') {
+                document.getElementById('dash-content-overview').style.display = 'flex';
+                document.getElementById('dash-tab-btn-overview').classList.add('active');
+            } else if (subTab === 'reports') {
+                document.getElementById('dash-content-reports').style.display = 'flex';
+                document.getElementById('dash-tab-btn-reports').classList.add('active');
+                generateSalesReport();
+            } else if (subTab === 'expenses') {
+                document.getElementById('dash-content-expenses').style.display = 'flex';
+                document.getElementById('dash-tab-btn-expenses').classList.add('active');
+                renderExpensesLog();
+            }
+        }
+
+        // --- EXPENSES LOG CONTROLLER ---
+        function openExpenseModal() {
+            document.getElementById('expense-desc').value = "";
+            document.getElementById('expense-category').value = "Misc";
+            document.getElementById('expense-amount').value = "";
+            openModal('modal-expense');
+        }
+
+        function submitExpenseForm() {
+            const desc = document.getElementById('expense-desc').value.trim();
+            const category = document.getElementById('expense-category').value;
+            const amountVal = document.getElementById('expense-amount').value;
+
+            if (!desc) {
+                showToast("⚠️ Expense description is required");
+                return;
+            }
+            if (!amountVal || isNaN(Number(amountVal)) || Number(amountVal) <= 0) {
+                showToast("⚠️ Valid amount is required");
+                return;
+            }
+
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = now.getFullYear();
+            const dateStr = `${y}-${m}-${d}`; // ISO standard for easy filters
+
+            const newExp = {
+                id: 'exp_' + Date.now(),
+                desc,
+                category,
+                amount: Number(amountVal),
+                date: dateStr
+            };
+
+            expenses.unshift(newExp);
+            saveExpenses();
+            closeModal('modal-expense');
+            showToast("💸 Expense recorded successfully!");
+            renderExpensesLog();
+            renderDashboard();
+        }
+
+        function removeExpenseLog(expId) {
+            if (confirm("🗑️ Are you sure you want to delete this expense log?")) {
+                expenses = expenses.filter(e => e.id !== expId);
+                saveExpenses();
+                showToast("Expense removed.");
+                renderExpensesLog();
+                renderDashboard();
+            }
+        }
+
+        function renderExpensesLog() {
+            const container = document.getElementById('expenses-list');
+            if (!container) return;
+
+            // sum up overall expenses
+            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+            document.getElementById('exp-total-amount').textContent = `₹${total.toFixed(0)}`;
+
+            if (expenses.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 24px; font-size: 13px;">
+                        No business expenses logged this month.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = expenses.map(e => {
+                let prettyDate = e.date;
+                if (prettyDate.includes('-')) {
+                    const parts = prettyDate.split('-');
+                    prettyDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+                return `
+                    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                        <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;">
+                            <span style="font-weight: 700; font-size: 13px; color: var(--primary-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeMarkup(e.desc)}</span>
+                            <div style="display: flex; gap: 6px; align-items: center; font-size: 11px; color: var(--text-secondary);">
+                                <span style="background: #E0E0E0; padding: 1px 6px; border-radius: 6px; font-weight: bold; font-size: 9px; text-transform: uppercase;">${escapeMarkup(e.category)}</span>
+                                <span>•</span>
+                                <span>${prettyDate}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 14px; font-weight: 800; color: var(--danger-color);">₹${e.amount}</span>
+                            <button onclick="removeExpenseLog('${e.id}')" style="border: none; background: none; font-size: 16px; color: var(--danger-color); cursor: pointer; padding: 6px;" aria-label="Delete Expense">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- AUTOMATED SALES REPORTS ---
+        function generateSalesReport() {
+            const period = document.getElementById('report-period').value;
+            const now = new Date();
+            const dateStr = updateDateHeader(); // todays dd/mm/yyyy
+
+            let filteredBills = [];
+            let filteredExpenses = [];
+
+            if (period === 'daily') {
+                filteredBills = bills.filter(b => b.date === dateStr);
+                const d = String(now.getDate()).padStart(2, '0');
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const y = now.getFullYear();
+                const todayIsoStr = `${y}-${m}-${d}`;
+                filteredExpenses = expenses.filter(e => e.date === todayIsoStr);
+            } else if (period === 'weekly') {
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(now.getDate() - 7);
+                filteredBills = bills.filter(b => {
+                    const parts = b.date.split('/');
+                    const billDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return billDate >= sevenDaysAgo;
+                });
+                filteredExpenses = expenses.filter(e => {
+                    const billDate = new Date(e.date);
+                    return billDate >= sevenDaysAgo;
+                });
+            }
+
+            const totalSalesSum = filteredBills.reduce((sum, b) => sum + b.total, 0);
+            const totalCashReceived = filteredBills.filter(b => b.status === 'Paid').reduce((sum, b) => sum + b.total, 0);
+            const totalCreditOutstanding = filteredBills.filter(b => b.status === 'Pending').reduce((sum, b) => sum + b.total, 0);
+
+            const totalExpenseAmount = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const netProfitValue = totalSalesSum - totalExpenseAmount;
+
+            document.getElementById('rep-total-sales').textContent = `₹${totalSalesSum.toFixed(2)}`;
+            document.getElementById('rep-cash').textContent = `₹${totalCashReceived.toFixed(2)}`;
+            document.getElementById('rep-credit').textContent = `₹${totalCreditOutstanding.toFixed(2)}`;
+            
+            const profitEl = document.getElementById('rep-net-profit');
+            profitEl.textContent = `₹${netProfitValue.toFixed(2)}`;
+            if (netProfitValue >= 0) {
+                profitEl.style.color = '#1B5E20';
+            } else {
+                profitEl.style.color = '#B71C1C';
+            }
+
+            // Top items
+            const itemCounts = {};
+            filteredBills.forEach(b => {
+                b.items.forEach(cartItem => {
+                    if (!itemCounts[cartItem.name]) {
+                        itemCounts[cartItem.name] = { name: cartItem.name, q: 0, earn: 0, unit: cartItem.unit };
+                    }
+                    itemCounts[cartItem.name].q += cartItem.qty;
+                    itemCounts[cartItem.name].earn += (cartItem.price * cartItem.qty);
+                });
+            });
+
+            const sortedItems = Object.values(itemCounts)
+                .sort((a, b) => b.earn - a.earn)
+                .slice(0, 5);
+
+            const itemsContainer = document.getElementById('rep-top-items');
+            if (sortedItems.length === 0) {
+                itemsContainer.innerHTML = `
+                    <div style="font-size: 12px; color: var(--text-secondary); text-align: center; padding: 12px; background: var(--bg-color); border-radius: 8px;">
+                        No item sale transactions logged within this period.
+                    </div>
+                `;
+                return;
+            }
+
+            itemsContainer.innerHTML = sortedItems.map((item, idx) => {
+                return `
+                    <div style="background: var(--bg-color); display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--primary-color);">
+                        <div style="display: flex; flex-direction: column; min-width: 0;">
+                            <span style="font-size: 12px; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${idx+1}. ${escapeMarkup(item.name)}</span>
+                            <span style="font-size: 10px; color: var(--text-secondary);">Qty: ${item.q.toFixed(1).replace(/\.0$/, '')} ${item.unit}</span>
+                        </div>
+                        <span style="font-size: 12px; font-weight: 800; color: var(--primary-dark);">₹${item.earn.toFixed(0)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function shareReportToWhatsApp() {
+            const period = document.getElementById('report-period').value;
+            const periodLabel = period === 'daily' ? "DAILY SALES REPORT" : "WEEKLY SALES REPORT";
+
+            const totalSales = document.getElementById('rep-total-sales').textContent;
+            const profitVal = document.getElementById('rep-net-profit').textContent;
+            const cashVal = document.getElementById('rep-cash').textContent;
+            const creditVal = document.getElementById('rep-credit').textContent;
+
+            let topStr = "";
+            const itemsContainer = document.getElementById('rep-top-items');
+            const itemEls = itemsContainer.querySelectorAll('div');
+            itemEls.forEach((el, index) => {
+                const nameText = el.querySelector('span').textContent.replace(/^\d+\.\s*/, '');
+                const qtyText = el.querySelector('span:nth-child(2)').textContent;
+                const earnText = el.querySelector('span:last-child').textContent;
+                topStr += `${index + 1}. ${nameText} (${qtyText}) - ${earnText}\n`;
+            });
+
+            if (!topStr) topStr = "No inventory sales logged.\n";
+
+            const message = `📊 *SMARTKIRANA - ${periodLabel}* 📊\n` +
+                `--------------------------------------------------\n` +
+                `💰 Total Sales: ${totalSales}\n` +
+                `💵 Cash Received: ${cashVal}\n` +
+                `🔴 Credit Pending: ${creditVal}\n` +
+                `📈 Actual Net Profit: ${profitVal}\n\n` +
+                `🔥 *TOP SOLD PRODUCTS:* \n` +
+                `--------------------------------------------------\n` +
+                topStr +
+                `--------------------------------------------------\n` +
+                `Generated on: ${new Date().toLocaleDateString()}`;
+
+            const waUrl = "https://wa.me/?text=" + encodeURIComponent(message);
+            window.open(waUrl, '_blank');
+        }
+
+        // ==========================================
+        // 1C. SUPPLIERS MANAGEMENT HUB LOGIC
+        // ==========================================
+        function openSuppliersModal() {
+            closeSupplierFormInline();
+            closeSupplierLedgerInline();
+            renderSuppliersList();
+            openModal('modal-suppliers');
+        }
+
+        function renderSuppliersList() {
+            const container = document.getElementById('suppliers-list-container');
+            if (!container) return;
+
+            document.getElementById('inv-suppliers-count').textContent = suppliers.length + ' active';
+
+            if (suppliers.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: var(--text-secondary); padding: 32px 16px; font-size: 13px;">
+                        No wholesaling suppliers added. Tap "+ Add Partner" to create your first connection.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = suppliers.map(sup => {
+                return `
+                    <div class="card" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-color); display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div style="display: flex; flex-direction: column; gap: 2px;">
+                                <span style="font-weight: 800; font-size: 14px; color: var(--primary-dark);">${escapeMarkup(sup.name)}</span>
+                                <span style="font-size: 11px; color: var(--text-secondary); font-weight: 500;">📞 ${escapeMarkup(sup.phone || 'No phone')}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size: 10px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase; display: block;">You Owe Them</span>
+                                <span style="font-size: 13px; font-weight: 900; color: ${sup.dues > 0 ? 'var(--danger-color)' : 'var(--text-color)'};">₹${sup.dues.toFixed(0)}</span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 4px; gap: 6px;">
+                            <button onclick="openSupplierLedgerInline('${sup.id}')" style="height: 34px; padding: 0 10; border-radius: 8px; font-size: 11px; font-weight: bold; background: #FFEBEE; color: var(--danger-color); border: none; cursor: pointer; flex: 1;">
+                                📝 Ledger/Pay
+                            </button>
+                            <button onclick="whatsAppSupplierText('${sup.id}')" style="height: 34px; padding: 0 10; border-radius: 8px; font-size: 11px; font-weight: bold; background: #E8F5E9; color: #2E7D32; border: none; cursor: pointer; flex: 1;">
+                                💬 WhatsApp
+                            </button>
+                            <button onclick="removeSupplierDirectly('${sup.id}')" style="height: 34px; width: 34px; border-radius: 8px; border: 1px solid #FFCDD2; background: none; color: var(--danger-color); font-size: 12px; cursor: pointer;">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function removeSupplierDirectly(supId) {
+            const supplier = suppliers.find(s => s.id === supId);
+            if (!supplier) return;
+            if (confirm(`🗑️ Delete supplier profile for "${supplier.name}"?`)) {
+                suppliers = suppliers.filter(s => s.id !== supId);
+                saveSuppliers();
+                showToast("Supplier profile removed.");
+                renderSuppliersList();
+                renderDashboard();
+            }
+        }
+
+        function whatsAppSupplierText(supId) {
+            const supplier = suppliers.find(s => s.id === supId);
+            if (!supplier || !supplier.phone) {
+                showToast("⚠️ No cellphone configured for this wholesaling partner.");
+                return;
+            }
+            const message = `Hello ${supplier.name}, checking in regarding wholesale restocking deliveries for SmartKirana store. Thank you!`;
+            const phoneClean = supplier.phone.replace(/[^\d]/g, '');
+            if (typeof Android !== "undefined" && Android.shareToWhatsApp) {
+                Android.shareToWhatsApp(message, phoneClean);
+            } else {
+                window.open(`https://wa.me/91${phoneClean}?text=${encodeURIComponent(message)}`, '_blank');
+            }
+        }
+
+        // --- Supplier Profile Editor Inline Form ---
+        function openAddSupplierForm() {
+            document.getElementById('supplier-editor-form').style.display = 'block';
+            document.getElementById('sup-form-title').textContent = "New Supplier Profile";
+            document.getElementById('form-sup-id').value = "";
+            document.getElementById('form-sup-name').value = "";
+            document.getElementById('form-sup-phone').value = "";
+        }
+
+        function closeSupplierFormInline() {
+            document.getElementById('supplier-editor-form').style.display = 'none';
+        }
+
+        function saveSupplierFormInline() {
+            const id = document.getElementById('form-sup-id').value;
+            const name = document.getElementById('form-sup-name').value.trim();
+            const phone = document.getElementById('form-sup-phone').value.trim();
+
+            if (!name) {
+                showToast("⚠️ Supplier Name is required");
+                return;
+            }
+
+            if (id === "") {
+                const newSup = {
+                    id: 'sup_' + Date.now(),
+                    name,
+                    phone,
+                    dues: 0,
+                    outstandingHistory: []
+                };
+                suppliers.push(newSup);
+                showToast("👥 Supplier Partner added!");
+            } else {
+                const target = suppliers.find(s => s.id === id);
+                if (target) {
+                    target.name = name;
+                    target.phone = phone;
+                    showToast("Profile updated.");
+                }
+            }
+
+            saveSuppliers();
+            closeSupplierFormInline();
+            renderSuppliersList();
+            renderDashboard();
+        }
+
+        // --- Supplier Ledger Inline Form ---
+        function openSupplierLedgerInline(supId) {
+            const supplier = suppliers.find(s => s.id === supId);
+            if (!supplier) return;
+
+            document.getElementById('supplier-ledger-form').style.display = 'block';
+            document.getElementById('sub-ledger-title').textContent = `Manage Ledger: ${supplier.name}`;
+            document.getElementById('ledger-sup-id').value = supId;
+            document.getElementById('ledger-type').value = "payment";
+            document.getElementById('ledger-desc').value = "";
+            document.getElementById('ledger-amount').value = "";
+            toggleLedgerPurchaseFields();
+        }
+
+        function toggleLedgerPurchaseFields() {
+            const type = document.getElementById('ledger-type').value;
+            const descGroup = document.getElementById('ledger-desc-group');
+            if (type === 'purchase') {
+                descGroup.style.display = 'block';
+            } else {
+                descGroup.style.display = 'none';
+            }
+        }
+
+        function closeSupplierLedgerInline() {
+            document.getElementById('supplier-ledger-form').style.display = 'none';
+        }
+
+        function saveSupplierLedgerInline() {
+            const supId = document.getElementById('ledger-sup-id').value;
+            const type = document.getElementById('ledger-type').value;
+            const desc = document.getElementById('ledger-desc').value.trim();
+            const amountVal = document.getElementById('ledger-amount').value;
+
+            const supplier = suppliers.find(s => s.id === supId);
+            if (!supplier) return;
+
+            if (!amountVal || isNaN(Number(amountVal)) || Number(amountVal) <= 0) {
+                showToast("⚠️ Enter a valid ledger amount");
+                return;
+            }
+
+            const amt = Number(amountVal);
+            const now = new Date().toLocaleDateString();
+
+            if (type === 'payment') {
+                supplier.dues = Math.max(0, supplier.dues - amt);
+                supplier.outstandingHistory.push({
+                    date: now,
+                    desc: "Cash Settlement Payment Made",
+                    amount: -amt
+                });
+                showToast(`💸 Paid ₹${amt} to "${supplier.name}"`);
+            } else {
+                const invoiceDesc = desc || "Credit Warehouse Purchase";
+                supplier.dues += amt;
+                supplier.outstandingHistory.push({
+                    date: now,
+                    desc: invoiceDesc,
+                    amount: amt
+                });
+
+                // Add to expenses
+                const newExpense = {
+                    id: 'exp_sup_' + Date.now(),
+                    desc: `Wholesale Stock: ${supplier.name} (${invoiceDesc})`,
+                    category: "Inventory Purchase",
+                    amount: amt,
+                    date: new Date().toISOString().split('T')[0]
+                };
+                expenses.unshift(newExpense);
+                saveExpenses();
+
+                showToast(`📥 Restocking invoice of ₹${amt} registered under credits`);
+            }
+
+            saveSuppliers();
+            closeSupplierLedgerInline();
+            renderSuppliersList();
+            renderDashboard();
+        }
+
+        // ==========================================
+        // 1D. LOW STOCK ALERTS & INTEGRATIONS
+        // ==========================================
+        function openLowStockReorderModal() {
+            renderLowStockGroupedPanel();
+            openModal('modal-low-stock');
+        }
+
+        function renderLowStockGroupedPanel() {
+            const container = document.getElementById('low-stock-grouped-container');
+            if (!container) return;
+
+            const lowItems = inventory.filter(item => Number(item.qty) <= Number(item.threshold));
+            document.getElementById('inv-lowstock-alert-lbl').textContent = lowItems.length + ' items';
+
+            if (lowItems.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #2E7D32; padding: 24px; font-size: 13px; font-weight: bold;">
+                        ✅ All inventory levels are healthy! No low stock warnings.
+                    </div>
+                `;
+                return;
+            }
+
+            const groups = {};
+            lowItems.forEach(item => {
+                const supId = item.supplierId || 'none';
+                if (!groups[supId]) {
+                    groups[supId] = [];
+                }
+                groups[supId].push(item);
+            });
+
+            container.innerHTML = Object.keys(groups).map(supId => {
+                let supName = "Other / Unassigned Suppliers";
+                let supPhone = "";
+                if (supId !== 'none') {
+                    const matchedSup = suppliers.find(s => s.id === supId);
+                    if (matchedSup) {
+                        supName = matchedSup.name;
+                        supPhone = matchedSup.phone;
+                    }
+                }
+
+                const listItemsMarkup = groups[supId].map(item => {
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 12px;">
+                            <span style="font-weight: 500;">• ${escapeMarkup(item.name)}</span>
+                            <span style="color: var(--danger-color); font-weight: bold;">Stock: ${item.qty} ${item.unit} (Min: ${item.threshold})</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const shareBtn = supId !== 'none' && supPhone
+                    ? `<button onclick="shareSupplierRestockReport('${supId}')" style="margin-top: 8px; width: 100%; height: 38px; border-radius: 8px; background: #2E7D32; color: white; border: none; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                         💬 Share Reorder on WhatsApp
+                       </button>`
+                    : `<div style="font-size: 10px; color: var(--text-secondary); text-align: center; margin-top: 6px;">💡 Set a whitelisted Wholesaling supplier to dispatch this list directly via WhatsApp.</div>`;
+
+                return `
+                    <div class="card" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--surface-color); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                        <h4 style="font-size: 13px; color: #E65100; margin: 0 0 6px 0; font-weight: 800; border-bottom: 1px dashed var(--border-color); padding-bottom: 4px;">🏢 ${escapeMarkup(supName)}</h4>
+                        <div style="display: flex; flex-direction: column;">
+                            ${listItemsMarkup}
+                        </div>
+                        ${shareBtn}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function shareSupplierRestockReport(supId) {
+            const supplier = suppliers.find(s => s.id === supId);
+            if (!supplier) return;
+
+            const lowItems = inventory.filter(item => item.supplierId === supId && Number(item.qty) <= Number(item.threshold));
+            if (lowItems.length === 0) return;
+
+            let reorderStr = "";
+            lowItems.forEach(item => {
+                const suggestedRestock = Math.max(10, item.threshold * 3);
+                reorderStr += `- ${item.name}: Order ${suggestedRestock} ${item.unit} (Current is ${item.qty})\n`;
+            });
+
+            const message = `📦 *REORDER REQUISITION - SMARTKIRANA* 📦\n` +
+                `To Wholesaler Partner: *${supplier.name}*\n` +
+                `--------------------------------------------------\n` +
+                `Hello, we need to order the following wholesale inventory units immediately:\n\n` +
+                reorderStr +
+                `\n--------------------------------------------------\n` +
+                `Generated on: ${new Date().toLocaleDateString()}\n` +
+                `Please process and issue warehouse shipping dispatch info. Thanks!`;
+
+            const phoneClean = supplier.phone.replace(/[^\d]/g, '');
+            if (typeof Android !== "undefined" && Android.shareToWhatsApp) {
+                Android.shareToWhatsApp(message, phoneClean);
+            } else {
+                window.open(`https://wa.me/91${phoneClean}?text=${encodeURIComponent(message)}`, '_blank');
+            }
+        }
+
+        // ==========================================
+        // 1E. PHYSICAL & CAMERA BARCODE SCANNING
+        // ==========================================
+        let html5QrcodeScanner = null;
+        function toggleBarcodeScanner() {
+            const area = document.getElementById('barcode-scanner-area');
+            if (!area) return;
+
+            if (area.style.display === 'none') {
+                area.style.display = 'flex';
+                document.getElementById('barcode-manual-input').focus();
+                
+                try {
+                    html5QrcodeScanner = new Html5Qrcode("barcode-reader");
+                    html5QrcodeScanner.start(
+                        { facingMode: "environment" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 150 }
+                        },
+                        (decodedText) => {
+                            playBeepSound();
+                            showToast(`🎯 Barcode scanned: "${decodedText}"`);
+                            triggerAutomaticBarcodeSalesItem(decodedText);
+                        },
+                        (errorMessage) => {
+                            // frame skip
+                        }
+                    ).catch(err => {
+                        console.log("Unable to start scanner:", err);
+                    });
+                } catch (e) {
+                    console.log("Scanner exception:", e);
+                }
+            } else {
+                area.style.display = 'none';
+                if (html5QrcodeScanner) {
+                    try {
+                        html5QrcodeScanner.stop().then(() => {
+                            html5QrcodeScanner = null;
+                        }).catch(e => {
+                            html5QrcodeScanner = null;
+                        });
+                    } catch (e) {
+                        html5QrcodeScanner = null;
+                    }
+                }
+            }
+        }
+
+        function playBeepSound() {
+            try {
+                const context = new (window.AudioContext || window.webkitAudioContext)();
+                if (context.state === 'suspended') {
+                    context.resume();
+                }
+                const oscillator = context.createOscillator();
+                const gainNode = context.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(context.destination);
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 850;
+                gainNode.gain.setValueAtTime(0.08, context.currentTime);
+                oscillator.start();
+                oscillator.stop(context.currentTime + 0.12);
+            } catch (e) {
+                console.log("Beep Audio failed:", e);
+            }
+        }
+
+        function handleManualBarcodeScanned() {
+            const code = document.getElementById('barcode-manual-input').value.trim();
+            if (!code) return;
+            playBeepSound();
+            showToast(`🎯 Simulate Scanner: Code ${code}`);
+            triggerAutomaticBarcodeSalesItem(code);
+            document.getElementById('barcode-manual-input').value = "";
+        }
+
+        function triggerAutomaticBarcodeSalesItem(code) {
+            const matchedItem = inventory.find(i => String(i.barcode).trim() === String(code).trim());
+            if (!matchedItem) {
+                showToast(`❌ No item found with Barcode/ID: "${code}"`);
+                return;
+            }
+            addItemToCheckoutCart(matchedItem.id);
+        }
+
+        function triggerDirectDelete(itemId, event) {
+            if (event) event.stopPropagation();
+            
+            const item = inventory.find(i => i.id === itemId);
+            if (!item) return;
+
+            const confirmValue = confirm(`🗑️ Are you sure you want to delete "${item.name}" from inventory?`);
+            if (confirmValue) {
+                inventory = inventory.filter(i => i.id !== itemId);
+                saveInventory();
+                showToast("📦 Item removed from inventory");
+                renderInventory();
+            } else {
+                // reset swipe state
+                const cardEl = document.querySelector(`[data-item-id="${itemId}"]`);
+                if (cardEl) {
+                    cardEl.style.transform = "translateX(0)";
+                }
+            }
+        }
+
+
+        // ==========================================
+        // 3. NEW BILL CHECKOUT CONTROLLER ENGINE
+        // ==========================================
+        
+        // Initialize or resets the checkout tab layout
+        function initNewBill() {
+            cart = [];
+            checkoutPaymentStatus = 'Paid';
+            document.getElementById('bill-customer-name').value = "";
+            if (document.getElementById('bill-customer-phone')) {
+                document.getElementById('bill-customer-phone').value = "";
+            }
+            document.getElementById('bill-customer-warning').style.display = 'none';
+            document.getElementById('bill-item-search').value = "";
+            document.getElementById('bill-search-results').style.display = 'none';
+            
+            // set checkout state toggles active
+            setCheckoutPaymentMode('Paid');
+            renderCheckoutCart();
+        }
+
+        // Step 1 blur: warning notice regarding pre-existing balances
+        function checkCustomerPendingDues(customerName) {
+            const name = customerName.trim().toLowerCase();
+            const warningEl = document.getElementById('bill-customer-warning');
+
+            if (name === "") {
+                warningEl.style.display = 'none';
+                return;
+            }
+
+            // sum dues
+            const userDues = bills
+                .filter(b => b.customerName.trim().toLowerCase() === name && b.status === 'Pending')
+                .reduce((sum, b) => sum + b.total, 0);
+
+            if (userDues > 0) {
+                warningEl.innerHTML = `⚠️ <strong>${customerName}</strong> has outstanding pending bills totaling <strong>₹${userDues.toFixed(2)}</strong>! Please collect.`;
+                warningEl.style.display = 'block';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        }
+
+        // Step 2 input: active searches through catalog
+        function searchCheckoutItems(query) {
+            const dropdown = document.getElementById('bill-search-results');
+            const q = query.trim().toLowerCase();
+
+            if (q === "") {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            const matches = inventory.filter(i => i.name.toLowerCase().includes(q));
+
+            if (matches.length === 0) {
+                dropdown.innerHTML = `
+                    <div style="padding:14px; text-align:center; color:var(--text-secondary); font-size:13px;">
+                        No stocked items match the query.
+                    </div>
+                `;
+            } else {
+                dropdown.innerHTML = matches.map(item => {
+                    const isOutOfStock = item.qty <= 0;
+                    return `
+                        <div class="search-dropdown-item" onclick="addItemToCheckoutCart('${item.id}')">
+                            <div>
+                                <span class="search-dropdown-name">${escapeMarkup(item.name)}</span><br>
+                                <span class="search-dropdown-details">${item.category} | ₹${item.price.toFixed(2)} per ${item.unit}</span>
+                            </div>
+                            <div>
+                                ${isOutOfStock 
+                                    ? `<span style="color:var(--danger-color);font-weight:bold;font-size:12px;">OUT OF STOCK</span>`
+                                    : `<span style="font-size:12px;color:var(--primary-color);">Stock: ${item.qty} ${item.unit}</span>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+
+        // Add to active cart list
+        function addItemToCheckoutCart(itemId) {
+            const item = inventory.find(i => i.id === itemId);
+            if (!item) return;
+
+            // Check if cart already possesses product
+            const existing = cart.find(c => c.id === itemId);
+
+            if (item.qty <= 0) {
+                showToast("⚠️ Out of Stock! Cannot add to bill");
+                return;
+            }
+
+            if (existing) {
+                let increment = 1;
+                if (item.unit === 'kg' || item.unit === 'litre') {
+                    increment = 0.25; // default 250g or 250ml increment
+                }
+
+                if (existing.qty + increment > item.qty) {
+                    showToast(`⚠️ Cannot add more! Inventory has limit of ${item.qty} ${item.unit}`);
+                    return;
+                }
+                existing.qty = parseFloat((existing.qty + increment).toFixed(3));
+                
+                // Update custom currency / ratio representations
+                if (existing.orderedUnit === 'g' || existing.orderedUnit === 'ml') {
+                    existing.orderedAmount = parseFloat((existing.qty * 1000).toFixed(1));
+                } else {
+                    existing.orderedAmount = existing.qty;
+                }
+                existing.subtotal = parseFloat((existing.qty * existing.unitPrice).toFixed(2));
+            } else {
+                let initialQty = 1;
+                let orderedAmount = 1;
+                let orderedUnit = item.unit;
+
+                // Intelligently default local grocery items to compact 250g/250ml weight orders
+                if (item.unit === 'kg') {
+                    initialQty = 0.25;
+                    orderedAmount = 250;
+                    orderedUnit = 'g';
+                } else if (item.unit === 'litre') {
+                    initialQty = 0.25;
+                    orderedAmount = 250;
+                    orderedUnit = 'ml';
+                }
+
+                cart.push({
+                    id: item.id,
+                    name: item.name,
+                    qty: initialQty,
+                    unit: item.unit,
+                    orderedAmount: orderedAmount,
+                    orderedUnit: orderedUnit,
+                    unitPrice: item.price,
+                    subtotal: parseFloat((initialQty * item.price).toFixed(2))
+                });
+            }
+
+            // Clear search field & close dropdown
+            document.getElementById('bill-item-search').value = "";
+            document.getElementById('bill-search-results').style.display = 'none';
+
+            renderCheckoutCart();
+            showToast(`🛒 "${item.name}" added to cart`);
+        }
+
+        // Helper: Quick Presets Markup for kg/litre
+        function showPresetChipsMarkup(cartItem, idx) {
+            if (cartItem.unit === 'kg') {
+                const presets = [
+                    { label: '50g', amount: 50, u: 'g' },
+                    { label: '100g', amount: 100, u: 'g' },
+                    { label: '250g', amount: 250, u: 'g' },
+                    { label: '500g', amount: 500, u: 'g' },
+                    { label: '1kg', amount: 1, u: 'kg' },
+                    { label: '2kg', amount: 2, u: 'kg' }
+                ];
+                return `
+                    <div class="preset-chips">
+                        ${presets.map(p => {
+                            const active = (cartItem.orderedAmount === p.amount && cartItem.orderedUnit === p.u) ? 'active' : '';
+                            return `<button type="button" class="preset-chip ${active}" onclick="setCartPreset(${idx}, ${p.amount}, '${p.u}')">${p.label}</button>`;
+                        }).join('')}
+                    </div>
+                `;
+            } else if (cartItem.unit === 'litre') {
+                const presets = [
+                    { label: '50ml', amount: 50, u: 'ml' },
+                    { label: '100ml', amount: 100, u: 'ml' },
+                    { label: '250ml', amount: 250, u: 'ml' },
+                    { label: '500ml', amount: 500, u: 'ml' },
+                    { label: '1L', amount: 1, u: 'litre' },
+                    { label: '2L', amount: 2, u: 'litre' }
+                ];
+                return `
+                    <div class="preset-chips">
+                        ${presets.map(p => {
+                            const active = (cartItem.orderedAmount === p.amount && cartItem.orderedUnit === p.u) ? 'active' : '';
+                            return `<button type="button" class="preset-chip ${active}" onclick="setCartPreset(${idx}, ${p.amount}, '${p.u}')">${p.label}</button>`;
+                        }).join('')}
+                    </div>
+                `;
+            }
+            return '';
+        }
+
+        // Helper: Unit drop down selects
+        function showUnitDropdownMarkup(cartItem, idx) {
+            if (cartItem.unit === 'kg') {
+                return `
+                    <select class="custom-measure-unit" onchange="handleCartMeasureUnitChange(${idx}, this.value)">
+                        <option value="g" ${cartItem.orderedUnit === 'g' ? 'selected' : ''}>grams (g)</option>
+                        <option value="kg" ${cartItem.orderedUnit === 'kg' ? 'selected' : ''}>kilograms (kg)</option>
+                    </select>
+                `;
+            } else if (cartItem.unit === 'litre') {
+                return `
+                    <select class="custom-measure-unit" onchange="handleCartMeasureUnitChange(${idx}, this.value)">
+                        <option value="ml" ${cartItem.orderedUnit === 'ml' ? 'selected' : ''}>milliliters (ml)</option>
+                        <option value="litre" ${cartItem.orderedUnit === 'litre' ? 'selected' : ''}>liters (L)</option>
+                    </select>
+                `;
+            } else {
+                return `
+                    <select class="custom-measure-unit" disabled>
+                        <option>${cartItem.unit}</option>
+                    </select>
+                `;
+            }
+        }
+
+        // Recalculates total values and render active tables
+        function renderCheckoutCart() {
+            const container = document.getElementById('cart-items-list');
+            const totalVal = document.getElementById('cart-grand-total');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="cart-placeholder">Cart is currently empty. Tap items in Step 2 to add.</div>`;
+                totalVal.textContent = "₹0.00";
+                return;
+            }
+
+            let grandTotal = 0;
+
+            container.innerHTML = cart.map((cartItem, idx) => {
+                grandTotal += cartItem.subtotal;
+                
+                return `
+                    <div class="cart-item-row" style="flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid #EEEEEE;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div class="cart-item-info">
+                                <span class="cart-item-name" style="font-size: 15px;">${escapeMarkup(cartItem.name)}</span>
+                                <span class="cart-item-meta" style="font-size: 12px; color: var(--text-secondary);">₹${cartItem.unitPrice.toFixed(2)} per ${cartItem.unit}</span>
+                            </div>
+                            
+                            <div class="cart-item-right" style="align-items: center; gap: 10px;">
+                                <div class="cart-stepper">
+                                    <button type="button" class="stepper-btn" onclick="updateCartQty(${idx}, -1)">-</button>
+                                    <span class="stepper-value" style="width: auto; min-width: 44px; padding: 0 4px; font-size: 13px;">${cartItem.orderedAmount}</span>
+                                    <button type="button" class="stepper-btn" onclick="updateCartQty(${idx}, 1)">+</button>
+                                </div>
+                                <span class="cart-item-subtotal">₹${cartItem.subtotal.toFixed(2)}</span>
+                                <button type="button" class="cart-item-remove" onclick="removeCartItem(${idx})">×</button>
+                            </div>
+                        </div>
+
+                        <!-- Easy select buttons (presets for packaging) -->
+                        ${showPresetChipsMarkup(cartItem, idx)}
+
+                        <!-- Manual Precise Measure textfield -->
+                        <div class="custom-measure-row">
+                            <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px;">Or Custom:</span>
+                            <input type="number" step="any" min="0.001" class="custom-measure-input" value="${cartItem.orderedAmount}" oninput="handleCartMeasureInput(${idx}, this.value)" style="flex-shrink: 0;">
+                            ${showUnitDropdownMarkup(cartItem, idx)}
+                            <span style="font-size: 11px; color: var(--text-secondary); font-style: italic; white-space: nowrap;">
+                                (= ${parseFloat(cartItem.qty.toFixed(4))} ${cartItem.unit})
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totalVal.textContent = `₹${grandTotal.toFixed(2)}`;
+        }
+
+        // Stepper utility functions supporting sub-unit step scales
+        function updateCartQty(index, increment) {
+            const cartItem = cart[index];
+            const stockItem = inventory.find(i => i.id === cartItem.id);
+            if (!stockItem) return;
+
+            let step = 1;
+            if (cartItem.orderedUnit === 'g' || cartItem.orderedUnit === 'ml') {
+                step = 50; // step by 50 g or 50 ml
+            } else if (cartItem.orderedUnit === 'kg' || cartItem.orderedUnit === 'litre') {
+                step = 0.25; // step by 250 g or 250 ml
+            }
+
+            const newAmount = Math.max(0, parseFloat((cartItem.orderedAmount + (increment * step)).toFixed(3)));
+
+            if (newAmount <= 0) {
+                removeCartItem(index);
+                return;
+            }
+
+            // Convert back to base qty to check stock
+            let qtyInBase = newAmount;
+            if (stockItem.unit === 'kg' && cartItem.orderedUnit === 'g') {
+                qtyInBase = parseFloat((newAmount / 1000).toFixed(4));
+            } else if (stockItem.unit === 'litre' && cartItem.orderedUnit === 'ml') {
+                qtyInBase = parseFloat((newAmount / 1000).toFixed(4));
+            }
+
+            if (qtyInBase > stockItem.qty) {
+                showToast(`⚠️ Cannot exceed stock level (${stockItem.qty} ${stockItem.unit})`);
+                return;
+            }
+
+            cartItem.orderedAmount = newAmount;
+            cartItem.qty = qtyInBase;
+            cartItem.subtotal = parseFloat((qtyInBase * cartItem.unitPrice).toFixed(2));
+            
+            renderCheckoutCart();
+        }
+
+        function removeCartItem(index) {
+            const removedItem = cart[index];
+            cart.splice(index, 1);
+            renderCheckoutCart();
+            showToast(`🗑️ "${removedItem.name}" deleted from cart`);
+        }
+
+        // Preset Quick Action click handler
+        function setCartPreset(index, amount, unit) {
+            const cartItem = cart[index];
+            const stockItem = inventory.find(i => i.id === cartItem.id);
+            if (!stockItem) return;
+
+            let qtyInBase = amount;
+            if (stockItem.unit === 'kg' && unit === 'g') {
+                qtyInBase = parseFloat((amount / 1000).toFixed(4));
+            } else if (stockItem.unit === 'litre' && unit === 'ml') {
+                qtyInBase = parseFloat((amount / 1000).toFixed(4));
+            }
+
+            if (qtyInBase > stockItem.qty) {
+                showToast(`⚠️ Cannot exceed stock level (${stockItem.qty} ${stockItem.unit})`);
+                return;
+            }
+
+            cartItem.orderedAmount = amount;
+            cartItem.orderedUnit = unit;
+            cartItem.qty = qtyInBase;
+            cartItem.subtotal = parseFloat((qtyInBase * cartItem.unitPrice).toFixed(2));
+
+            renderCheckoutCart();
+            showToast(`✓ Set to preset ${amount}${unit}`);
+        }
+
+        // Direct-Type Precise Custom Measure handler (preserves mobile focus)
+        function handleCartMeasureInput(index, value) {
+            const val = parseFloat(value);
+            if (isNaN(val) || val <= 0) return;
+
+            const cartItem = cart[index];
+            const stockItem = inventory.find(i => i.id === cartItem.id);
+            if (!stockItem) return;
+
+            let qtyInBase = val;
+            if (stockItem.unit === 'kg' && cartItem.orderedUnit === 'g') {
+                qtyInBase = parseFloat((val / 1000).toFixed(4));
+            } else if (stockItem.unit === 'litre' && cartItem.orderedUnit === 'ml') {
+                qtyInBase = parseFloat((val / 1000).toFixed(4));
+            }
+
+            if (qtyInBase > stockItem.qty) {
+                showToast(`⚠️ Capped at max stock level: ${stockItem.qty} ${stockItem.unit}`);
+                qtyInBase = stockItem.qty;
+                if (cartItem.orderedUnit === 'g' || cartItem.orderedUnit === 'ml') {
+                    cartItem.orderedAmount = parseFloat((qtyInBase * 1000).toFixed(1));
+                } else {
+                    cartItem.orderedAmount = qtyInBase;
+                }
+                const row = document.querySelectorAll('.cart-item-row')[index];
+                if (row) {
+                    const inp = row.querySelector('.custom-measure-input');
+                    if (inp) inp.value = cartItem.orderedAmount;
+                }
+            } else {
+                cartItem.orderedAmount = val;
+            }
+
+            cartItem.qty = qtyInBase;
+            cartItem.subtotal = parseFloat((qtyInBase * cartItem.unitPrice).toFixed(2));
+            
+            updateCartItemRowSubtotal(index);
+        }
+
+        // Direct-Type UI Dropdown Custom Measure state changer 
+        function handleCartMeasureUnitChange(index, unit) {
+            const cartItem = cart[index];
+            const stockItem = inventory.find(i => i.id === cartItem.id);
+            if (!stockItem) return;
+
+            // Recalculate amount conversions cleanly
+            let oldAmount = cartItem.orderedAmount;
+            let newAmount = oldAmount;
+
+            if (stockItem.unit === 'kg') {
+                if (cartItem.orderedUnit === 'kg' && unit === 'g') {
+                    newAmount = parseFloat((oldAmount * 1000).toFixed(1));
+                } else if (cartItem.orderedUnit === 'g' && unit === 'kg') {
+                    newAmount = parseFloat((oldAmount / 1000).toFixed(4));
+                }
+            } else if (stockItem.unit === 'litre') {
+                if (cartItem.orderedUnit === 'litre' && unit === 'ml') {
+                    newAmount = parseFloat((oldAmount * 1000).toFixed(1));
+                } else if (cartItem.orderedUnit === 'ml' && unit === 'litre') {
+                    newAmount = parseFloat((oldAmount / 1000).toFixed(4));
+                }
+            }
+
+            cartItem.orderedUnit = unit;
+            cartItem.orderedAmount = newAmount;
+            
+            // Adjust base weights
+            let qtyInBase = newAmount;
+            if (stockItem.unit === 'kg' && unit === 'g') {
+                qtyInBase = parseFloat((newAmount / 1000).toFixed(4));
+            } else if (stockItem.unit === 'litre' && unit === 'ml') {
+                qtyInBase = parseFloat((newAmount / 1000).toFixed(4));
+            }
+            
+            cartItem.qty = qtyInBase;
+            cartItem.subtotal = parseFloat((qtyInBase * cartItem.unitPrice).toFixed(2));
+
+            renderCheckoutCart();
+        }
+
+        // Specialized focus preservation total rendering updates
+        function updateCartItemRowSubtotal(index) {
+            const cartItem = cart[index];
+            const row = document.querySelectorAll('.cart-item-row')[index];
+            if (row) {
+                // Update live calculations right in panel
+                const subtotalEl = row.querySelector('.cart-item-subtotal');
+                if (subtotalEl) {
+                    subtotalEl.textContent = `₹${cartItem.subtotal.toFixed(2)}`;
+                }
+                const stepperVal = row.querySelector('.stepper-value');
+                if (stepperVal) {
+                    stepperVal.textContent = cartItem.orderedAmount;
+                }
+                const baseInfo = row.querySelector('.custom-measure-row span:last-child');
+                if (baseInfo) {
+                    baseInfo.textContent = `(= ${parseFloat(cartItem.qty.toFixed(4))} ${cartItem.unit})`;
+                }
+            }
+            // Sync overall panel sum total
+            let grandTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+            document.getElementById('cart-grand-total').textContent = `₹${grandTotal.toFixed(2)}`;
+        }
+
+        // Payment Toggle controller segment tabs
+        function setCheckoutPaymentMode(mode) {
+            checkoutPaymentStatus = mode;
+
+            const paidBtn = document.getElementById('pay-btn-paid');
+            const pendingBtn = document.getElementById('pay-btn-pending');
+
+            if (mode === 'Paid') {
+                paidBtn.classList.add('active');
+                pendingBtn.classList.remove('active');
+            } else {
+                paidBtn.classList.remove('active');
+                pendingBtn.classList.add('active');
+            }
+        }
+
+        // Generate Receipts saved to database logs
+        function submitGenerateBill() {
+            const customerName = document.getElementById('bill-customer-name').value.trim();
+
+            if (customerName === "") {
+                showToast("⚠️ Please enter customer name first");
+                document.getElementById('bill-customer-name').focus();
+                return;
+            }
+
+            if (cart.length === 0) {
+                showToast("⚠️ Cart is empty. Please add items to generating bills");
+                return;
+            }
+
+            // Calculate billing identifiers using helper
+            let maxNum = 0;
+            bills.forEach(b => {
+                const match = b.id.match(/BILL-(\d+)/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNum) maxNum = num;
+                }
+            });
+            const billId = `BILL-${String(maxNum + 1).padStart(3, '0')}`;
+
+            // Calculate grand total totals
+            const billTotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+
+            // Deducts quantities sequentially in stock records
+            cart.forEach(cartItem => {
+                const stockItem = inventory.find(i => i.id === cartItem.id);
+                if (stockItem) {
+                    stockItem.qty = Math.max(0, stockItem.qty - cartItem.qty);
+                }
+            });
+            saveInventory(); // commit stock edits
+
+            // Setup new Bill Object structure
+            const newBillObj = {
+                id: billId,
+                customerName: customerName,
+                date: updateDateHeader(),
+                items: JSON.parse(JSON.stringify(cart)), // cloned items
+                total: billTotal,
+                status: checkoutPaymentStatus
+            };
+
+            // Register into logs db
+            bills.push(newBillObj);
+            saveBills();
+
+            // Store active pointer globally so we can share easily 
+            activeExplorerBill = newBillObj;
+
+            // Load bill format on terminal pre container view
+            const receiptText = generateThermalInvoiceText(newBillObj);
+            document.getElementById('thermal-receipt-text').textContent = receiptText;
+            
+            // Set dynamic visual updates inside overlays
+            document.getElementById('success-prompt-heading').textContent = "Receipt Generated !";
+            document.getElementById('success-prompt-sub').innerHTML = `Bill <strong>${billId}</strong> registered successfully and stock balances updated.`;
+
+            // Display success modal overlay view sheets
+            openModal('modal-bill-success');
+        }
+
+        function closeModalAndResetBill() {
+            closeModal('modal-bill-success');
+            initNewBill(); // reset forms completely
+            switchTab('dashboard'); // take back to dashboard to observe update statistics
+        }
+
+
+        // ==========================================
+        // 4. BILL HISTORY CONTROLLER ENGINE
+        // ==========================================
+        function setHistoryFilter(category) {
+            activeHistoryFilter = category;
+            
+            // toggle buttons visualization class active
+            document.querySelectorAll('.filter-seg-btn').forEach(btn => btn.classList.remove('active'));
+
+            if (category === 'All') document.getElementById('hist-filter-all').classList.add('active');
+            if (category === 'Paid') document.getElementById('hist-filter-paid').classList.add('active');
+            if (category === 'Pending') document.getElementById('hist-filter-pending').classList.add('active');
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const listEl = document.getElementById('history-list-container');
+            const searchVal = document.getElementById('history-search').value.trim().toLowerCase();
+
+            let matched = bills;
+
+            // Apply search filter
+            if (searchVal !== '') {
+                matched = matched.filter(b => b.customerName.toLowerCase().includes(searchVal));
+            }
+
+            // Apply segment classification filter
+            if (activeHistoryFilter !== 'All') {
+                matched = matched.filter(b => b.status === activeHistoryFilter);
+            }
+
+            if (matched.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">No historic bills matched</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render matching listings newest first order
+            const chronSorted = [...matched].reverse();
+
+            listEl.innerHTML = chronSorted.map(bill => {
+                const badgeStyle = bill.status === 'Paid' ? 'badge-success' : 'badge-danger';
+                return `
+                    <div class="bill-sm-card ${bill.status === 'Pending' ? 'status-pending' : ''}" onclick="openBillExplorer('${bill.id}')">
+                        <div class="bill-sm-left">
+                            <span class="bill-sm-name">${escapeMarkup(bill.customerName)}</span>
+                            <span class="bill-sm-date">${bill.id} | ${bill.date}</span>
+                        </div>
+                        <div class="bill-sm-right">
+                            <span class="bill-sm-total">₹${bill.total.toFixed(2)}</span>
+                            <span class="badge ${badgeStyle}">${bill.status}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Displays Detailed In-Depth Bill overlay
+        function openBillExplorer(billId) {
+            const targetBill = bills.find(b => b.id === billId);
+            if (!targetBill) return;
+
+            activeExplorerBill = targetBill;
+
+            document.getElementById('explorer-title').textContent = `${targetBill.id}`;
+            document.getElementById('explorer-receipt-text').textContent = generateThermalInvoiceText(targetBill);
+
+            // Bind void operation buttons
+            const delBtn = document.getElementById('explorer-delete-bill-btn');
+            delBtn.setAttribute('onclick', `voidInvoiceReceipt('${targetBill.id}')`);
+
+            openModal('modal-bill-explorer');
+        }
+
+        function voidInvoiceReceipt(billId) {
+            const confirmVal = confirm(`⚠️ Are you sure you want to void/delete this bill (${billId})? Stock values will NOT be auto-restored.`);
+            if (confirmVal) {
+                bills = bills.filter(b => b.id !== billId);
+                saveBills();
+                closeModal('modal-bill-explorer');
+                showToast("🗑️ Bill deleted permanently");
+                renderHistory();
+                renderDashboard();
+            }
+        }
+
+
+        // ==========================================
+        // 5. PENDING OUTSTANDING DUES WINDOW
+        // ==========================================
+        function renderDues() {
+            const duesContainer = document.getElementById('dues-list-container');
+            const outstandingSumEl = document.getElementById('sum-outstanding-dues');
+
+            const pendingBills = bills.filter(b => b.status === 'Pending');
+
+            // Calculate exact total dues sum
+            const sumDuesVal = pendingBills.reduce((sum, b) => sum + b.total, 0);
+            outstandingSumEl.textContent = `₹${sumDuesVal.toFixed(2)}`;
+
+            if (pendingBills.length === 0) {
+                duesContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✓</div>
+                        <div class="empty-state-title">Great details! No dues pending!</div>
+                        <span style="font-size:12px;color:var(--text-secondary);">Outstanding balances are completely settled.</span>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group dues oldest to newest
+            duesContainer.innerHTML = pendingBills.map(bill => {
+                return `
+                    <div class="card due-card" onclick="openBillExplorer('${bill.id}')">
+                        <div class="due-card-header">
+                            <div>
+                                <span class="due-customer-name">${escapeMarkup(bill.customerName)}</span>
+                                <div class="due-bill-id">${bill.id}</div>
+                            </div>
+                            <span class="due-bill-date">${bill.date}</span>
+                        </div>
+                        
+                        <div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">
+                            Purchased: ${bill.items.map(it => {
+                                const qtyStr = it.orderedAmount !== undefined ? `${it.orderedAmount}${it.orderedUnit}` : `${it.qty}${it.unit}`;
+                                return `${qtyStr} of ${escapeMarkup(it.name)}`;
+                            }).join(', ')}
+                        </div>
+
+                        <div class="due-amount-row">
+                            <div>
+                                <span style="font-size:11px;color:var(--text-secondary);display:block;text-transform:uppercase;font-weight:700;">Outstanding</span>
+                                <span class="due-amount">₹${bill.total.toFixed(2)}</span>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-secondary" style="height:40px; min-height:40px; border-radius:10px; font-size:13px;" onclick="clearPendingDueImmediate('${bill.id}', event)">
+                                Mark as Paid ✓
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function clearPendingDueImmediate(billId, event) {
+            if (event) event.stopPropagation(); // don't open explorer detailed cards
+            
+            const idx = bills.findIndex(b => b.id === billId);
+            if (idx === -1) return;
+
+            const confirmVal = confirm(`💵 Mark Bill "${billId}" for "${bills[idx].customerName}" as Paid?`);
+            if (confirmVal) {
+                bills[idx].status = 'Paid';
+                saveBills();
+                showToast(`✓ Bill ${billId} marked as Paid successfully !`);
+                renderDues();
+                renderDashboard();
+            }
+        }
+
+
+        // ==========================================
+        // MECHANICAL TEXT FORMATTERS & EXPORTERS
+        // ==========================================
+
+        // Generate monospaced 32-character micro-printer receipt text format
+        function generateThermalInvoiceText(bill) {
+            let pHeader = "================================\n";
+            pHeader    += "          SMARTKIRANA           \n";
+            pHeader    += "       Mobile Bill Receipt      \n";
+            pHeader    += "================================\n";
+            pHeader    += `Receipt : ${bill.id}\n`;
+            pHeader    += `Date    : ${bill.date}\n`;
+            pHeader    += `Client  : ${bill.customerName}\n`;
+            pHeader    += `Status  : ${bill.status.toUpperCase()}\n`;
+            pHeader    += "--------------------------------\n";
+            pHeader    += "Item        Rate/U  Qty/Me   Sub\n";
+            pHeader    += "--------------------------------\n";
+
+            bill.items.forEach(it => {
+                let formattedName = it.name.substring(0, 11).padEnd(11, ' ');
+                let basePriceWithUnit = `${it.unitPrice.toFixed(0)}/${it.unit.substring(0,2)}`;
+                let formattedPrice = basePriceWithUnit.padStart(7, ' '); // 7 chars
+                
+                let qtyStr = "";
+                if (it.orderedAmount !== undefined && it.orderedUnit !== undefined) {
+                    qtyStr = `${it.orderedAmount}${it.orderedUnit}`;
+                } else {
+                    qtyStr = `${it.qty}${it.unit}`;
+                }
+                let formattedQty = qtyStr.padStart(6, ' '); // 6 chars
+                let formattedSub = `₹${it.subtotal.toFixed(0)}`.padStart(5, ' '); // 5 chars
+                
+                // Let's connect them: 11 + 1 (space) + 7 + 1 + 6 + 1 + 5 = 32 chars!
+                pHeader += `${formattedName} ${formattedPrice} ${formattedQty} ${formattedSub}\n`;
+            });
+
+            pHeader   += "--------------------------------\n";
+            pHeader   += `GRAND TOTAL:          ₹${bill.total.toFixed(2).padStart(9, ' ')}\n`;
+            pHeader   += "================================\n";
+            pHeader   += "   Thank You! Visit Again! 🛒  \n";
+            pHeader   += "================================";
+            return pHeader;
+        }
+
+        // Clipboard management helper
+        function copyTextToClipboard(textToCopy) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        showToast("📋 Text copied to clipboard !");
+                    })
+                    .catch(err => {
+                        // fallback
+                        legacyCopy(textToCopy);
+                    });
+            } else {
+                legacyCopy(textToCopy);
+            }
+        }
+
+        function legacyCopy(textToCopy) {
+            const input = document.createElement('textarea');
+            input.value = textToCopy;
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) showToast("📋 Text copied to clipboard !");
+                else showToast("❌ Copy operation failed");
+            } catch (err) {
+                showToast("❌ Unable to copy dynamically");
+            }
+            document.body.removeChild(input);
+        }
+
+        // Direct Share to WhatsApp utilizing standard mobile link encoders
+        function triggerWhatsAppExternalShare(textMessage) {
+            if (typeof Android !== "undefined" && Android.shareToWhatsApp) {
+                Android.shareToWhatsApp(textMessage, "");
+            } else {
+                const encodedValue = encodeURIComponent(textMessage);
+                const mobileUrl = `https://wa.me/?text=${encodedValue}`;
+                window.open(mobileUrl, '_blank');
+            }
+        }
+
+        // Actions binders Success Modal Screen
+        function copyReceiptTextToClipboard() {
+            if (!activeExplorerBill) return;
+            const text = generateThermalInvoiceText(activeExplorerBill);
+            copyTextToClipboard(text);
+        }
+
+        function shareReceiptToWhatsApp() {
+            if (!activeExplorerBill) return;
+            const text = generateThermalInvoiceText(activeExplorerBill);
+            triggerWhatsAppExternalShare(text);
+        }
+
+        // Actions binders Explorer Modal Screen
+        function copyReceiptTextFromExplorer() {
+            if (!activeExplorerBill) return;
+            const text = generateThermalInvoiceText(activeExplorerBill);
+            copyTextToClipboard(text);
+        }
+
+        function shareReceiptFromExplorer() {
+            if (!activeExplorerBill) return;
+            const text = generateThermalInvoiceText(activeExplorerBill);
+            triggerWhatsAppExternalShare(text);
+        }
+
+
+        // ==========================================
+        // EXTRA ADMIN SETTING CONTROL RESET
+        // ==========================================
+        function confirmResetAllData() {
+            const checkOption = confirm("⚠️ RESET DATABASE WARNING !\n\nThis will wipe ALL accumulated bill histories, checkout records, outstanding dues, and restore initial standard items in catalog. Do you wish to continue?");
+            if (checkOption) {
+                localStorage.removeItem('sk_inventory');
+                localStorage.removeItem('sk_bills');
+                showToast("⚙️ Database restored to factory defaults.");
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        }
+
+        // ==========================================
+        // AI RECEIPT SCANNER & PARSING CONTROLLER
+        // ==========================================
+        let scannedPreviewItems = [];
+
+        function triggerReceiptScan() {
+            const input = document.getElementById('ai-bill-file-input');
+            if (input) {
+                input.click();
+            }
+        }
+
+        function handleAiBillScanSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Show loading spinner
+            document.getElementById('ai-loading-overlay').style.display = 'flex';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Compress image to fit nicely within Gemini token bounds (max 1024 width/height)
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const max_size = 1024;
+                    
+                    if (width > height) {
+                        if (width > max_size) {
+                            height *= max_size / width;
+                            width = max_size;
+                        }
+                    } else {
+                        if (height > max_size) {
+                            width *= max_size / height;
+                            height = max_size;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Get compressed Base64
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+                    
+                    // Clean file input value to allow scan of the same file again
+                    event.target.value = "";
+
+                    processReceiptWithGemini(compressedBase64);
+                };
+                img.onerror = function() {
+                    document.getElementById('ai-loading-overlay').style.display = 'none';
+                    showToast("⚠️ Failed to load selected image.");
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = function() {
+                document.getElementById('ai-loading-overlay').style.display = 'none';
+                showToast("⚠️ Error reading file.");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function processReceiptWithGemini(base64Data) {
+            let apiKey = "";
+            try {
+                if (typeof Android !== "undefined" && Android.getGeminiApiKey) {
+                    apiKey = Android.getGeminiApiKey();
+                }
+            } catch (e) {
+                console.error("Android interface error:", e);
+            }
+
+            if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+                apiKey = localStorage.getItem('sk_gemini_api_key') || "";
+            }
+
+            if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+                const promptKey = prompt("Gemini API Key is missing! To scan bills using Gemini AI, please enter your Gemini API Key here (it will be saved locally):", "");
+                if (promptKey && promptKey.trim()) {
+                    apiKey = promptKey.trim();
+                    localStorage.setItem('sk_gemini_api_key', apiKey);
+                    showToast("✅ API Key saved locally!");
+                } else {
+                    document.getElementById('ai-loading-overlay').style.display = 'none';
+                    showToast("⚠️ Gemini API Key is missing!");
+                    return;
+                }
+            }
+
+            const modelName = "gemini-2.5-flash";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+            const promptText = "Analyze this receipt image of a bill or invoice and extract all individual purchased items. Identify the item Name (highly descriptive, clean, English title), Category (strictly evaluate and select one of: 'Grains', 'Dairy', 'Snacks', 'Beverages', 'Vegetables', 'Fruits', 'Household', 'Other'), Quantity/Stock (the parsed amount/number under qty), Unit Type (strictly identify if it fits 'kg', 'litre', 'piece', 'packet', 'box', 'dozen'), and Price (unit price rate for 1 single unit as a positive number). Extract all readable items. Return strictly a JSON array matching the requested response schema.";
+
+            const requestPayload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: promptText },
+                            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            items: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        name: { type: "STRING" },
+                                        category: { 
+                                            type: "STRING", 
+                                            enum: ["Grains", "Dairy", "Snacks", "Beverages", "Vegetables", "Fruits", "Household", "Other"]
+                                        },
+                                        qty: { type: "NUMBER" },
+                                        unit: { 
+                                            type: "STRING", 
+                                            enum: ["kg", "litre", "piece", "packet", "box", "dozen"]
+                                        },
+                                        price: { type: "NUMBER" },
+                                        threshold: { type: "INTEGER" }
+                                    },
+                                    required: ["name", "category", "qty", "unit", "price", "threshold"]
+                                }
+                            }
+                        },
+                        required: ["items"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(requestPayload)
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(`Server code ${response.status}: ${errText}`);
+                }
+
+                const data = await response.json();
+                
+                let textResult = "";
+                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+                    textResult = data.candidates[0].content.parts[0].text;
+                }
+
+                if (!textResult) {
+                    throw new Error("No text output in response content list.");
+                }
+
+                const parsedJson = JSON.parse(textResult);
+                scannedPreviewItems = parsedJson.items || [];
+
+                document.getElementById('ai-loading-overlay').style.display = 'none';
+
+                if (scannedPreviewItems.length === 0) {
+                    showToast("⚠️ No products could be extracted. Please take a clearer photo.");
+                    return;
+                }
+
+                renderScannedPreviewList();
+                openModal('modal-scanned-items');
+                showToast(`🎉 Automatically parsed ${scannedPreviewItems.length} items!`);
+
+            } catch (error) {
+                console.error("receipt scan error:", error);
+                document.getElementById('ai-loading-overlay').style.display = 'none';
+                showToast("⚠️ Parsing failed. Check image clarity and your key status.");
+            }
+        }
+
+        function renderScannedPreviewList() {
+            const listContainer = document.getElementById('scanned-items-list-container');
+            if (scannedPreviewItems.length === 0) {
+                listContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--text-secondary); font-size: 13px;">No items scanned/all removed.</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = scannedPreviewItems.map((item, idx) => `
+                <div class="scanned-item-card" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; background: var(--surface-color); position: relative; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <button type="button" onclick="removeScannedPreviewItem(${idx})" style="position: absolute; right: 10px; top: 10px; background: none; border: none; font-size: 20px; color: #ff1744; font-weight: bold; cursor: pointer; padding: 4px; line-height: 1;">×</button>
+                    
+                    <div style="flex-direction: column; display: flex; gap: 3px;">
+                        <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px;">Item Name</label>
+                        <input type="text" value="${escapeMarkup(item.name)}" style="width: 88%; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 700; background: var(--bg-color); color: var(--text-color);" oninput="updateScannedPreviewItem(${idx}, 'name', this.value)">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="flex-direction: column; display: flex; gap: 3px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Category</label>
+                            <select style="border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; font-size: 12px; background: var(--bg-color); color: var(--text-color);" onchange="updateScannedPreviewItem(${idx}, 'category', this.value)">
+                                <option value="Grains" ${item.category === 'Grains' ? 'selected' : ''}>Grains</option>
+                                <option value="Dairy" ${item.category === 'Dairy' ? 'selected' : ''}>Dairy</option>
+                                <option value="Snacks" ${item.category === 'Snacks' ? 'selected' : ''}>Snacks</option>
+                                <option value="Beverages" ${item.category === 'Beverages' ? 'selected' : ''}>Beverages</option>
+                                <option value="Vegetables" ${item.category === 'Vegetables' ? 'selected' : ''}>Vegetables</option>
+                                <option value="Fruits" ${item.category === 'Fruits' ? 'selected' : ''}>Fruits</option>
+                                <option value="Household" ${item.category === 'Household' ? 'selected' : ''}>Household</option>
+                                <option value="Other" ${item.category === 'Other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </div>
+                        <div style="flex-direction: column; display: flex; gap: 3px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Unit Type</label>
+                            <select style="border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; font-size: 12px; background: var(--bg-color); color: var(--text-color);" onchange="updateScannedPreviewItem(${idx}, 'unit', this.value)">
+                                <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>kg</option>
+                                <option value="litre" ${item.unit === 'litre' ? 'selected' : ''}>litre</option>
+                                <option value="piece" ${item.unit === 'piece' ? 'selected' : ''}>piece</option>
+                                <option value="packet" ${item.unit === 'packet' ? 'selected' : ''}>packet</option>
+                                <option value="box" ${item.unit === 'box' ? 'selected' : ''}>box</option>
+                                <option value="dozen" ${item.unit === 'dozen' ? 'selected' : ''}>dozen</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="flex-direction: column; display: flex; gap: 3px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Stock Qty</label>
+                            <input type="number" step="any" value="${item.qty}" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; font-size: 12px; background: var(--bg-color); color: var(--text-color);" oninput="updateScannedPreviewItem(${idx}, 'qty', this.value)">
+                        </div>
+                        <div style="flex-direction: column; display: flex; gap: 3px;">
+                            <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Unit Price (₹)</label>
+                            <input type="number" step="any" value="${item.price}" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; font-size: 12px; background: var(--bg-color); color: var(--text-color);" oninput="updateScannedPreviewItem(${idx}, 'price', this.value)">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateScannedPreviewItem(index, key, val) {
+            if (!scannedPreviewItems[index]) return;
+            if (key === 'qty' || key === 'price' || key === 'threshold') {
+                scannedPreviewItems[index][key] = Math.max(0, parseFloat(val) || 0);
+            } else {
+                scannedPreviewItems[index][key] = val;
+            }
+        }
+
+        function removeScannedPreviewItem(index) {
+            scannedPreviewItems.splice(index, 1);
+            renderScannedPreviewList();
+            if (scannedPreviewItems.length === 0) {
+                closeModal('modal-scanned-items');
+                showToast("🗑️ All scanned items dismissed.");
+            }
+        }
+
+        function confirmAddScannedItems() {
+            if (scannedPreviewItems.length === 0) {
+                closeModal('modal-scanned-items');
+                return;
+            }
+
+            let addedCount = 0;
+            let updatedCount = 0;
+
+            scannedPreviewItems.forEach(scannedItem => {
+                const match = inventory.find(i => i.name.trim().toLowerCase() === scannedItem.name.trim().toLowerCase());
+                
+                if (match) {
+                    match.qty = parseFloat((parseFloat(match.qty) + parseFloat(scannedItem.qty)).toFixed(3));
+                    match.price = scannedItem.price;
+                    updatedCount++;
+                } else {
+                    const newId = 'inv_' + Math.floor(Math.random() * 1000000);
+                    inventory.push({
+                        id: newId,
+                        name: scannedItem.name.trim(),
+                        category: scannedItem.category,
+                        qty: scannedItem.qty,
+                        unit: scannedItem.unit,
+                        price: scannedItem.price,
+                        threshold: scannedItem.threshold || 5
+                    });
+                    addedCount++;
+                }
+            });
+
+            saveInventory();
+            renderInventory();
+            renderDashboard();
+
+            closeModal('modal-scanned-items');
+            showToast(`✅ Scanned integration done: Added ${addedCount}, updated ${updatedCount} items!`);
+        }
+
+         // Security escaping utility to bypass scripting hacks in strings UI mappings
+        function escapeMarkup(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('theme-toggle-btn');
+            if (html.classList.contains('theme-dark')) {
+                html.classList.remove('theme-dark');
+                localStorage.setItem('sk_theme', 'light');
+                if (btn) btn.textContent = '🌙';
+                showToast("☀️ Light theme enabled");
+            } else {
+                html.classList.add('theme-dark');
+                localStorage.setItem('sk_theme', 'dark');
+                if (btn) btn.textContent = '☀️';
+                showToast("🌙 Dark theme enabled");
+            }
+        }
+
+        function syncThemeToggleBtn() {
+            const btn = document.getElementById('theme-toggle-btn');
+            if (!btn) return;
+            if (document.documentElement.classList.contains('theme-dark')) {
+                btn.textContent = '☀️';
+            } else {
+                btn.textContent = '🌙';
+            }
+        }
+
+        // Document First-load Launch Bootstraps
+        window.addEventListener('load', () => {
+            fetchDatabase();
+            updateDateHeader();
+            renderDashboard();
+            syncThemeToggleBtn();
+        });
+    </script>
+</body>
+</html>

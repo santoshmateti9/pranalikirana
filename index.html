@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SmartKirana</title>
+    <title>Pranali Kirana</title>
     <script>
         (function() {
             if (localStorage.getItem('sk_theme') === 'dark') {
@@ -1260,11 +1260,12 @@
     <header class="app-header">
         <div class="header-title-container">
             <span class="header-logo">🛒</span>
-            <div class="header-title">SmartKirana</div>
+            <div class="header-title">Pranali Kirana</div>
         </div>
         <div class="header-meta">
             <div class="header-date" id="current-date">04/06/2026</div>
             <button class="settings-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">🌙</button>
+            <button class="settings-btn" id="db-settings-btn" onclick="openDatabaseSettings()" title="Database Tools & Backup" aria-label="Database Tools & Backup">⚙️</button>
         </div>
     </header>
 
@@ -1675,19 +1676,26 @@
                 <div class="receipt-container">
                     <pre class="receipt-content" id="thermal-receipt-text">
 ================================
-          SMARTKIRANA           
+         PRANALI KIRANA         
 ================================
                     </pre>
                 </div>
 
-                <div class="modal-actions-container">
-                    <button class="btn btn-secondary" onclick="copyReceiptTextToClipboard()">
-                        📋 Copy Receipt
+                <div class="modal-actions-container" style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" style="flex: 1; padding: 0 4px; font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="copyReceiptTextToClipboard()">
+                        📋 Copy Text
                     </button>
-                    <button class="btn btn-primary" onclick="shareReceiptToWhatsApp()">
-                        💬 WhatsApp
+                    <button class="btn btn-secondary" style="flex: 1; padding: 0 4px; font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="shareReceiptToWhatsApp()">
+                        💬 Send WA
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1; padding: 0 4px; font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 4px; color: var(--text-color); border: 1px solid var(--border-color);" onclick="shareReceiptToSMS()">
+                        ✉️ Send SMS
                     </button>
                 </div>
+
+                <button class="btn btn-primary btn-block" style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); border: none; margin-top: 10px; margin-bottom: 4px; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="shareReceiptAsImage()">
+                    <span>📸</span> <span>Share Bill as Image (WA)</span>
+                </button>
 
                 <button class="btn btn-primary btn-block" style="background-color: #37474F;" onclick="closeModalAndResetBill()">
                     🆕 Begin New Transaction
@@ -1709,14 +1717,21 @@
                     <pre class="receipt-content" id="explorer-receipt-text"></pre>
                 </div>
 
-                <div class="modal-actions-container">
-                    <button class="btn btn-secondary" onclick="copyReceiptTextFromExplorer()">
-                        📋 Copy text
+                <div class="modal-actions-container" style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" style="flex: 1; padding: 0 4px; font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="copyReceiptTextFromExplorer()">
+                        📋 Copy Text
                     </button>
-                    <button class="btn btn-primary" onclick="shareReceiptFromExplorer()">
-                        💬 Share on WhatsApp
+                    <button class="btn btn-secondary" style="flex: 1; padding: 0 4px; font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="shareReceiptFromExplorer()">
+                        💬 Send WA
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1; padding: 0 4px; font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 4px; color: var(--text-color); border: 1px solid var(--border-color);" onclick="shareReceiptFromExplorerSMS()">
+                        ✉️ Send SMS
                     </button>
                 </div>
+
+                <button class="btn btn-primary btn-block" style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); border: none; margin-top: 10px; margin-bottom: 4px; font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="shareReceiptAsImageFromExplorer()">
+                    <span>📸</span> <span>Share Bill as Image (WA)</span>
+                </button>
 
                 <button class="btn btn-block btn-danger" id="explorer-delete-bill-btn">
                     🗑️ Void/Delete This Bill
@@ -1868,6 +1883,89 @@
                 </div>
 
                 <button class="btn btn-secondary btn-block" style="border-radius: 12px; height: 46px; font-weight: bold;" onclick="closeModal('modal-low-stock')">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal 8: Database Settings & Backup Tools -->
+    <div class="modal-overlay" id="modal-db-settings" style="z-index: 1042;">
+        <div class="modal-sheet">
+            <header class="modal-header">
+                <h3 class="modal-title">💾 Backup & Database Tools</h3>
+                <button class="modal-close-btn" onclick="closeModal('modal-db-settings')">×</button>
+            </header>
+            <div class="modal-body" style="max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+                <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 4px;">
+                    Ensure your business reports, customer bills, outstanding dues, and inventory counts are never lost. You can backup your storage directly to Google Drive or export standard backup files locally.
+                </p>
+
+                <!-- SECTION 1: GOOGLE DRIVE BACKUP -->
+                <div class="card" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; background: var(--bg-color); display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                        <span style="font-weight: bold; font-size: 13px; color: var(--primary-dark); display: flex; align-items: center; gap: 6px;">
+                            🤖 Google Drive Cloud Backup
+                        </span>
+                        <span class="badge" style="background-color: var(--primary-light); color: var(--primary-color); font-size: 10px; border-radius: 6px; padding: 2px 6px;">Recommended</span>
+                    </div>
+                    
+                    <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.35;">
+                        Save your master database securely directly to your Google Drive account so you can restore it anytime, on any device.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                        <button class="btn btn-primary" onclick="backupToGoogleDrive()" style="font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold;">
+                            📤 Backup to Drive
+                        </button>
+                        <button class="btn btn-secondary" onclick="restoreFromGoogleDrive()" style="font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; color: var(--text-color); border: 1px solid var(--border-color);">
+                            📥 Restore from Drive
+                        </button>
+                    </div>
+
+                    <!-- Auto Backup toggle switches -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                            <span style="font-size: 12px; font-weight: 700; color: var(--text-color);">Auto Cloud Syncing</span>
+                            <span style="font-size: 10px; color: var(--text-secondary);">Sync database on each billed invoice</span>
+                        </div>
+                        <input type="checkbox" id="auto-cloud-backup-toggle" onchange="toggleAutoCloudBackup()" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary-color);">
+                    </div>
+                </div>
+
+                <!-- SECTION 2: FILE EXPORT/IMPORT -->
+                <div class="card" style="border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; background: var(--bg-color); display: flex; flex-direction: column; gap: 10px;">
+                    <span style="font-weight: bold; font-size: 13px; color: var(--text-color);">
+                        💾 Manual Offline Backup Files
+                    </span>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.35;">
+                        Export the database as a single offline <code>.json</code> file to save on your phone, Share via WhatsApp, or manually upload to any storage option.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+                        <button class="btn btn-secondary" onclick="exportBackupFileLocal()" style="font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; color: var(--text-color); border: 1px solid var(--border-color);">
+                            📦 Export File
+                        </button>
+                        <button class="btn btn-secondary" onclick="triggerRestoreFileInput()" style="font-size: 11px; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: bold; color: var(--text-color); border: 1px solid var(--border-color);">
+                            📂 Import/Restore File
+                        </button>
+                    </div>
+                    <input type="file" id="offline-restore-file-input" accept=".json" onchange="handleOfflineRestoreSelected(event)" style="display: none;">
+                </div>
+
+                <!-- SECTION 3: DANGER ZONE -->
+                <div class="card" style="border: 1px dashed #EF4444; border-radius: 12px; padding: 12px; background: rgba(239, 68, 68, 0.05); display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-weight: bold; font-size: 12px; color: #DC2626; text-transform: uppercase; letter-spacing: 0.5px;">
+                        ⚠️ Warning Zone
+                    </span>
+                    <p style="font-size: 10px; color: var(--text-secondary); margin: 0; line-height: 1.35;">
+                        This actions is permanent and wipes all sales histories, custom inventory catalogs, and outstanding receivables. This cannot be undone unless you have a backup copy!
+                    </p>
+                    <button class="btn btn-danger" style="background: #E53935; border: none; font-size: 11px; font-weight: bold; height: 36px; border-radius: 8px;" onclick="confirmResetAllData()">
+                        🚨 Clear & Reset All Databases
+                    </button>
+                </div>
+
+                <button class="btn btn-secondary btn-block" style="border-radius: 12px; height: 46px; font-weight: bold; margin-top: 4px;" onclick="closeModal('modal-db-settings')">Close Settings</button>
             </div>
         </div>
     </div>
@@ -2572,7 +2670,7 @@
 
             if (!topStr) topStr = "No inventory sales logged.\n";
 
-            const message = `📊 *SMARTKIRANA - ${periodLabel}* 📊\n` +
+            const message = `📊 *PRANALI KIRANA - ${periodLabel}* 📊\n` +
                 `--------------------------------------------------\n` +
                 `💰 Total Sales: ${totalSales}\n` +
                 `💵 Cash Received: ${cashVal}\n` +
@@ -2661,7 +2759,7 @@
                 showToast("⚠️ No cellphone configured for this wholesaling partner.");
                 return;
             }
-            const message = `Hello ${supplier.name}, checking in regarding wholesale restocking deliveries for SmartKirana store. Thank you!`;
+            const message = `Hello ${supplier.name}, checking in regarding wholesale restocking deliveries for Pranali Kirana store. Thank you!`;
             const phoneClean = supplier.phone.replace(/[^\d]/g, '');
             if (typeof Android !== "undefined" && Android.shareToWhatsApp) {
                 Android.shareToWhatsApp(message, phoneClean);
@@ -2884,7 +2982,7 @@
                 reorderStr += `- ${item.name}: Order ${suggestedRestock} ${item.unit} (Current is ${item.qty})\n`;
             });
 
-            const message = `📦 *REORDER REQUISITION - SMARTKIRANA* 📦\n` +
+            const message = `📦 *REORDER REQUISITION - PRANALI KIRANA* 📦\n` +
                 `To Wholesaler Partner: *${supplier.name}*\n` +
                 `--------------------------------------------------\n` +
                 `Hello, we need to order the following wholesale inventory units immediately:\n\n` +
@@ -3479,6 +3577,8 @@
         // Generate Receipts saved to database logs
         function submitGenerateBill() {
             const customerName = document.getElementById('bill-customer-name').value.trim();
+            const phoneEl = document.getElementById('bill-customer-phone');
+            const customerPhone = phoneEl ? phoneEl.value.trim() : "";
 
             if (customerName === "") {
                 showToast("⚠️ Please enter customer name first");
@@ -3518,6 +3618,7 @@
             const newBillObj = {
                 id: billId,
                 customerName: customerName,
+                customerPhone: customerPhone,
                 date: updateDateHeader(),
                 items: JSON.parse(JSON.stringify(cart)), // cloned items
                 total: billTotal,
@@ -3541,6 +3642,13 @@
 
             // Display success modal overlay view sheets
             openModal('modal-bill-success');
+
+            // Trigger automatic cloud sync if configured
+            if (localStorage.getItem('sk_auto_cloud_backup') === 'true') {
+                setTimeout(() => {
+                    backupToGoogleDrive();
+                }, 800);
+            }
         }
 
         function closeModalAndResetBill() {
@@ -3668,12 +3776,14 @@
 
             // Group dues oldest to newest
             duesContainer.innerHTML = pendingBills.map(bill => {
+                const phoneStr = bill.customerPhone ? `📞 ${escapeMarkup(bill.customerPhone)}` : `<span style="color:#D32F2F;">⚠️ No phone number saved</span>`;
                 return `
                     <div class="card due-card" onclick="openBillExplorer('${bill.id}')">
                         <div class="due-card-header">
                             <div>
                                 <span class="due-customer-name">${escapeMarkup(bill.customerName)}</span>
-                                <div class="due-bill-id">${bill.id}</div>
+                                <div class="due-bill-phone" style="font-size: 11px; margin-top: 3px; font-weight: 500; color: var(--text-secondary);">${phoneStr}</div>
+                                <div class="due-bill-id" style="margin-top: 2px;">Ref: ${bill.id}</div>
                             </div>
                             <span class="due-bill-date">${bill.date}</span>
                         </div>
@@ -3685,13 +3795,22 @@
                             }).join(', ')}
                         </div>
 
-                        <div class="due-amount-row">
+                        <div class="due-amount-row" style="margin-bottom: 2px;">
                             <div>
                                 <span style="font-size:11px;color:var(--text-secondary);display:block;text-transform:uppercase;font-weight:700;">Outstanding</span>
                                 <span class="due-amount">₹${bill.total.toFixed(2)}</span>
                             </div>
                             <button type="button" class="btn btn-primary btn-secondary" style="height:40px; min-height:40px; border-radius:10px; font-size:13px;" onclick="clearPendingDueImmediate('${bill.id}', event)">
                                 Mark as Paid ✓
+                            </button>
+                        </div>
+
+                        <div class="due-reminders-panel" style="display: flex; gap: 8px; margin-top: 10px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                            <button type="button" class="btn btn-secondary" style="flex: 1; height: 34px; border-radius: 8px; font-size: 11px; font-weight: bold; padding: 0 4px; display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="sendDueReminder('${bill.id}', 'whatsapp', event)">
+                                💬 WA Reminder
+                            </button>
+                            <button type="button" class="btn btn-secondary" style="flex: 1; height: 34px; border-radius: 8px; font-size: 11px; font-weight: bold; padding: 0 4px; color: var(--text-color); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; gap: 4px;" onclick="sendDueReminder('${bill.id}', 'sms', event)">
+                                ✉️ SMS Fallback
                             </button>
                         </div>
                     </div>
@@ -3723,7 +3842,7 @@
         // Generate monospaced 32-character micro-printer receipt text format
         function generateThermalInvoiceText(bill) {
             let pHeader = "================================\n";
-            pHeader    += "          SMARTKIRANA           \n";
+            pHeader    += "         PRANALI KIRANA         \n";
             pHeader    += "       Mobile Bill Receipt      \n";
             pHeader    += "================================\n";
             pHeader    += `Receipt : ${bill.id}\n`;
@@ -3793,13 +3912,28 @@
         }
 
         // Direct Share to WhatsApp utilizing standard mobile link encoders
-        function triggerWhatsAppExternalShare(textMessage) {
+        function triggerWhatsAppExternalShare(textMessage, phone) {
+            const cleanPhone = phone || "";
             if (typeof Android !== "undefined" && Android.shareToWhatsApp) {
-                Android.shareToWhatsApp(textMessage, "");
+                Android.shareToWhatsApp(textMessage, cleanPhone);
             } else {
                 const encodedValue = encodeURIComponent(textMessage);
-                const mobileUrl = `https://wa.me/?text=${encodedValue}`;
+                const phoneClean = cleanPhone.replace(/[^\d]/g, '');
+                const mobileUrl = phoneClean ? `https://wa.me/91${phoneClean}?text=${encodedValue}` : `https://wa.me/?text=${encodedValue}`;
                 window.open(mobileUrl, '_blank');
+            }
+        }
+
+        // Direct Share to SMS with standard mobile fallback
+        function triggerSMSExternalShare(textMessage, phone) {
+            const cleanPhone = phone || "";
+            if (typeof Android !== "undefined" && Android.sendSMS) {
+                Android.sendSMS(textMessage, cleanPhone);
+            } else {
+                const encodedValue = encodeURIComponent(textMessage);
+                const phoneClean = cleanPhone.replace(/[^\d]/g, '');
+                const smsUrl = phoneClean ? `sms:+91${phoneClean}?body=${encodedValue}` : `sms:?body=${encodedValue}`;
+                window.open(smsUrl, '_blank');
             }
         }
 
@@ -3813,7 +3947,15 @@
         function shareReceiptToWhatsApp() {
             if (!activeExplorerBill) return;
             const text = generateThermalInvoiceText(activeExplorerBill);
-            triggerWhatsAppExternalShare(text);
+            const phone = activeExplorerBill.customerPhone || "";
+            triggerWhatsAppExternalShare(text, phone);
+        }
+
+        function shareReceiptToSMS() {
+            if (!activeExplorerBill) return;
+            const text = generateThermalInvoiceText(activeExplorerBill);
+            const phone = activeExplorerBill.customerPhone || "";
+            triggerSMSExternalShare(text, phone);
         }
 
         // Actions binders Explorer Modal Screen
@@ -3826,7 +3968,437 @@
         function shareReceiptFromExplorer() {
             if (!activeExplorerBill) return;
             const text = generateThermalInvoiceText(activeExplorerBill);
-            triggerWhatsAppExternalShare(text);
+            const phone = activeExplorerBill.customerPhone || "";
+            triggerWhatsAppExternalShare(text, phone);
+        }
+
+        function shareReceiptFromExplorerSMS() {
+            if (!activeExplorerBill) return;
+            const text = generateThermalInvoiceText(activeExplorerBill);
+            const phone = activeExplorerBill.customerPhone || "";
+            triggerSMSExternalShare(text, phone);
+        }
+
+        // CUSTOMER DUETIME EXTRA REMINDERS ACTION AGENT
+        function sendDueReminder(billId, channel, event) {
+            if (event) event.stopPropagation();
+            
+            const bill = bills.find(b => b.id === billId);
+            if (!bill) return;
+
+            // Prompt to add phone number if it is entirely empty or holds warning placeholder info
+            let phone = bill.customerPhone ? bill.customerPhone.trim() : "";
+            if (!phone) {
+                const newPhone = prompt(`⚠️ This customer has no phone number saved.\n\nPlease enter the mobile number for ${bill.customerName}:`);
+                if (newPhone === null) return; // user cancelled
+                const cleaned = newPhone.replace(/[^\d]/g, '');
+                if (cleaned.length < 10) {
+                    showToast("⚠️ Invalid phone number. Please specify a 10-digit number.");
+                    return;
+                }
+                bill.customerPhone = cleaned;
+                saveBills();
+                renderDues();
+                phone = cleaned;
+            }
+
+            // Generate beautifully customized dues reminder template text
+            const storeName = "Pranali Kirana";
+            const itemsList = bill.items.map(it => {
+                const qtyStr = it.orderedAmount !== undefined ? `${it.orderedAmount}${it.orderedUnit}` : `${it.qty}${it.unit}`;
+                return `${qtyStr} ${it.name}`;
+            }).join(', ');
+            
+            const message = `Hello ${bill.customerName}, this is a friendly payment reminder from *${storeName}* regarding your pending balance of *₹${bill.total.toFixed(2)}* under billing reference *${bill.id}* on *${bill.date}* (${itemsList}). Kindly clear your outstanding bills at your earliest convenience to help support your local neighborhood store. Thank you!`;
+
+            if (channel === 'whatsapp') {
+                triggerWhatsAppExternalShare(message, phone);
+            } else {
+                triggerSMSExternalShare(message, phone);
+            }
+        }
+
+        // --- GRAPHICAL CANVAS INVOICE GENERATOR & SHARE ---
+        function shareReceiptAsImage() {
+            if (!activeExplorerBill) return;
+            try {
+                showToast("⏳ Rendering bill image...");
+                const imgDataUrl = buildBillCanvas(activeExplorerBill);
+                const phone = activeExplorerBill.customerPhone || "";
+                if (imgDataUrl && typeof Android !== "undefined" && Android.shareImageToWhatsApp) {
+                    Android.shareImageToWhatsApp(imgDataUrl, phone);
+                } else {
+                    const win = window.open();
+                    if (win) {
+                        win.document.write(`<div style="text-align:center;padding:20px;font-family:sans-serif;"><p>Here is your generated invoice image. Right click/long press to save or share:</p><img src="${imgDataUrl}" style="box-shadow:0 4px 10px rgba(0,0,0,0.15);border-radius:8px;max-width:100%;height:auto;"/></div>`);
+                    } else {
+                        showToast("⚠️ Browser blocked invoice window. Try copying text instead.");
+                    }
+                }
+            } catch (err) {
+                console.error("Renderer error:", err);
+                showToast("❌ Unable to render bill as image.");
+            }
+        }
+
+        function shareReceiptAsImageFromExplorer() {
+            shareReceiptAsImage();
+        }
+
+        function buildBillCanvas(bill) {
+            if (!bill) return "";
+
+            // Dimensions metrics (Base sizing)
+            const baseWidth = 480;
+            const itemHeight = 38;
+            const headerHeight = 150;
+            const metaHeight = 120;
+            const totalsHeight = 110;
+            const footerHeight = 100;
+            
+            const baseHeight = headerHeight + metaHeight + (bill.items.length * itemHeight) + totalsHeight + footerHeight;
+            
+            // HD Retinal Device Pixel Scale Backing (2x scale for clear display on mobile)
+            const dpr = 2;
+            const canvas = document.createElement('canvas');
+            canvas.width = baseWidth * dpr;
+            canvas.height = baseHeight * dpr;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+            
+            // Anti-aliasing configurations
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.textBaseline = 'top';
+            
+            // 1. Solid clear white canvas background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, baseWidth, baseHeight);
+            
+            // Elegant wrapper border around the cash memo card
+            ctx.strokeStyle = '#D1D5DB';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(6, 6, baseWidth - 12, baseHeight - 12);
+            
+            // 2. Main Store Heading Banner Block (Classic Dark Charcoal for formal invoices)
+            ctx.fillStyle = '#111827'; 
+            ctx.fillRect(6, 6, baseWidth - 12, 75);
+            
+            // Store Title
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 22px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('PRANALI KIRANA SUPERMARKET', baseWidth / 2, 18);
+            
+            // Subtitle
+            ctx.fillStyle = '#A5F3FC';
+            ctx.font = '800 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('OFFICIAL DIGITAL RETAIL CASH MEMO', baseWidth / 2, 46);
+            
+            ctx.textAlign = 'left'; // reset text-align
+            
+            // 3. Metadata details & Customer labels
+            let currentY = 95;
+            
+            ctx.fillStyle = '#6B7280';
+            ctx.font = 'bold 10px system-ui, -apple-system, sans-serif';
+            ctx.fillText('RECIPIENT CUSTOMER:', 20, currentY);
+            ctx.fillText('INVOICE METADATA:', baseWidth - 180, currentY);
+            
+            currentY += 15;
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+            ctx.fillText(bill.customerName || 'Walk-in Customer / Retail User', 20, currentY);
+            
+            ctx.font = 'bold 12px Courier New, monospace';
+            ctx.fillText(`BILL ID: ${bill.id}`, baseWidth - 180, currentY);
+            
+            currentY += 18;
+            ctx.fillStyle = '#4B5563';
+            ctx.font = '500 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('Pranali Kirana billing checkout point #1', 20, currentY);
+            
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 12px Courier New, monospace';
+            ctx.fillText(`DATE   : ${bill.date}`, baseWidth - 180, currentY);
+            
+            currentY += 24;
+            
+            // Dotted Separator
+            ctx.strokeStyle = '#D1D5DB';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(15, currentY);
+            ctx.lineTo(baseWidth - 15, currentY);
+            ctx.stroke();
+            ctx.setLineDash([]); // clear dash
+            
+            currentY += 10;
+            
+            // 4. Products Table Headers block
+            ctx.fillStyle = '#F3F4F6';
+            ctx.fillRect(15, currentY, baseWidth - 30, 26);
+            
+            ctx.fillStyle = '#374151';
+            ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('ITEM PARTICULARS / CATEGORY', 25, currentY + 7);
+            ctx.fillText('QTY x UNIT PRICE', baseWidth - 185, currentY + 7);
+            
+            ctx.textAlign = 'right';
+            ctx.fillText('AMOUNT', baseWidth - 25, currentY + 7);
+            ctx.textAlign = 'left'; // reset
+            
+            currentY += 32;
+            
+            // 5. Build individual row items
+            bill.items.forEach((it) => {
+                let displayName = it.name;
+                if (displayName.length > 24) {
+                    displayName = displayName.substring(0, 22) + '...';
+                }
+                
+                // Item Name Label
+                ctx.fillStyle = '#111827';
+                ctx.font = '600 13px system-ui, -apple-system, sans-serif';
+                ctx.fillText(displayName, 25, currentY);
+                
+                // Price calculations sub-label
+                ctx.fillStyle = '#4B5563';
+                ctx.font = '12px system-ui, -apple-system, sans-serif';
+                
+                let qtyStr = "";
+                if (it.orderedAmount !== undefined && it.orderedUnit !== undefined) {
+                    qtyStr = `${it.orderedAmount} ${it.orderedUnit}`;
+                } else {
+                    qtyStr = `${it.qty} ${it.unit}`;
+                }
+                ctx.fillText(`₹${it.unitPrice.toFixed(0)}/${it.unit}  x  ${qtyStr}`, baseWidth - 185, currentY);
+                
+                // Item Totals (Aligned Right)
+                ctx.fillStyle = '#111827';
+                ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(`₹${it.subtotal.toFixed(2)}`, baseWidth - 25, currentY);
+                ctx.textAlign = 'left'; // reset
+                
+                // Underline grid dividing separator
+                currentY += 21;
+                ctx.strokeStyle = '#F3F4F6';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(15, currentY);
+                ctx.lineTo(baseWidth - 15, currentY);
+                ctx.stroke();
+                
+                currentY += 10;
+            });
+            
+            currentY += 2;
+            
+            // 6. Grand Totals highlights rectangle container
+            ctx.fillStyle = '#EFF6FF'; // light blue branding accent
+            ctx.fillRect(15, currentY, baseWidth - 30, 46);
+            
+            ctx.fillStyle = '#1E40AF';
+            ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+            ctx.fillText('BILL GRAND TOTAL (INCL. TAXES):', 30, currentY + 16);
+            
+            ctx.textAlign = 'right';
+            ctx.fillStyle = '#1E3A8A';
+            ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+            ctx.fillText(`₹${bill.total.toFixed(2)}`, baseWidth - 30, currentY + 13);
+            ctx.textAlign = 'left'; // reset
+            
+            currentY += 60;
+            
+            // 7. Official PAID Stamp badging vector graphics
+            ctx.save();
+            ctx.translate(baseWidth - 85, currentY + 15);
+            ctx.rotate(-0.16); // tilt angle of stamps
+            
+            ctx.strokeStyle = 'rgba(220, 38, 38, 0.75)'; // Crimson ink
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 30, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // inner outline circular line
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.arc(0, 0, 26, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.fillStyle = 'rgba(220, 38, 38, 0.75)';
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('PAID', 0, -4);
+            ctx.font = 'bold 7px system-ui, -apple-system, sans-serif';
+            ctx.fillText('VERIFIED', 0, 7);
+            ctx.restore();
+            
+            // 8. Bottom Footer Brand messages
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#9CA3AF';
+            ctx.font = 'italic 11px system-ui, -apple-system, sans-serif';
+            ctx.fillText('Your trust is our greatest asset! Thank you! Visit Again! 🛒', baseWidth / 2, currentY + 12);
+            
+            ctx.font = '900 8px system-ui, -apple-system, sans-serif';
+            ctx.fillStyle = '#D1D5DB';
+            ctx.fillText('SECURE AUTOMATED MOBILE CASH REGISTER SYSTEM - POWERED BY PRANALI KIRANA', baseWidth / 2, currentY + 28);
+            
+            return canvas.toDataURL('image/png');
+        }
+
+
+        // ==========================================
+        // PREMIUM GOOGLE DRIVE & LOCAL DB TOOLS
+        // ==========================================
+        function openDatabaseSettings() {
+            // Check state of auto backup toggle
+            const autoBackupOn = localStorage.getItem('sk_auto_cloud_backup') === 'true';
+            const toggleEl = document.getElementById('auto-cloud-backup-toggle');
+            if (toggleEl) {
+                toggleEl.checked = autoBackupOn;
+            }
+            openModal('modal-db-settings');
+        }
+
+        function toggleAutoCloudBackup() {
+            const toggleEl = document.getElementById('auto-cloud-backup-toggle');
+            if (toggleEl) {
+                localStorage.setItem('sk_auto_cloud_backup', toggleEl.checked ? 'true' : 'false');
+                showToast(toggleEl.checked ? "✓ Automatic Cloud Backup Enabled!" : "⚠️ Auto Cloud Backup Disabled.");
+            }
+        }
+
+        function getDatabaseBackupPayload() {
+            const payload = {
+                version: "1.0",
+                timestamp: Date.now(),
+                store: "Pranali Kirana",
+                data: {
+                    inventory: JSON.parse(localStorage.getItem('sk_inventory') || '[]'),
+                    bills: JSON.parse(localStorage.getItem('sk_bills') || '[]'),
+                    suppliers: JSON.parse(localStorage.getItem('sk_suppliers') || '[]'),
+                    expenses: JSON.parse(localStorage.getItem('sk_expenses') || '[]'),
+                    theme: localStorage.getItem('sk_theme') || 'light'
+                }
+            };
+            return JSON.stringify(payload, null, 2);
+        }
+
+        function backupToGoogleDrive() {
+            const payload = getDatabaseBackupPayload();
+            if (typeof Android !== "undefined" && Android.backupToGoogleDrive) {
+                showToast("⏳ Opening Google Drive save path...");
+                Android.backupToGoogleDrive(payload);
+            } else {
+                showToast("⚠️ Standard Web mode: Export file manually to upload to Drive.");
+            }
+        }
+
+        function restoreFromGoogleDrive() {
+            if (typeof Android !== "undefined" && Android.restoreFromGoogleDrive) {
+                showToast("⏳ Opening cloud backup file picker...");
+                Android.restoreFromGoogleDrive();
+            } else {
+                showToast("⚠️ Standard Web mode: Please import a backup file locally instead.");
+            }
+        }
+
+        function exportBackupFileLocal() {
+            const payload = getDatabaseBackupPayload();
+            if (typeof Android !== "undefined" && Android.saveBackupFileNative) {
+                Android.saveBackupFileNative(payload);
+            } else {
+                // fall back to standard browser downloads
+                try {
+                    const blob = new Blob([payload], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    a.href = url;
+                    a.download = `PranaliKirana_Backup_${dateStr}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showToast("✓ Backup JSON downloaded successfully!");
+                } catch(e) {
+                    showToast("❌ Unable to export backup: " + e.message);
+                }
+            }
+        }
+
+        function triggerRestoreFileInput() {
+            document.getElementById('offline-restore-file-input').click();
+        }
+
+        function handleOfflineRestoreSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const b64 = btoa(unescape(encodeURIComponent(content)));
+                    importDatabaseFromBase64(b64);
+                } catch (err) {
+                    showToast("❌ Unable to load file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function importDatabaseFromBase64(base64) {
+            try {
+                // Decode base64 payload safely supporting UTF-8 emoji contents
+                const rawBin = atob(base64);
+                const bytes = new Uint8Array(rawBin.length);
+                for (let i = 0; i < rawBin.length; i++) {
+                    bytes[i] = rawBin.charCodeAt(i);
+                }
+                const jsonStr = new TextDecoder().decode(bytes);
+                const payload = JSON.parse(jsonStr);
+                
+                if (!payload || !payload.data) {
+                    showToast("❌ Invalid backup file format.");
+                    return;
+                }
+                
+                const restoreData = payload.data;
+                
+                const confirmRestore = confirm("⚠️ RESTORE DATABASE WARNING !\n\nThis will OVERWRITE your current inventory list, sales transactions, bills, dues, and expenses with the data in this backup. Do you wish to continue?");
+                if (!confirmRestore) return;
+                
+                if (restoreData.inventory) {
+                    localStorage.setItem('sk_inventory', JSON.stringify(restoreData.inventory));
+                }
+                if (restoreData.bills) {
+                    localStorage.setItem('sk_bills', JSON.stringify(restoreData.bills));
+                }
+                if (restoreData.suppliers) {
+                    localStorage.setItem('sk_suppliers', JSON.stringify(restoreData.suppliers));
+                }
+                if (restoreData.expenses) {
+                    localStorage.setItem('sk_expenses', JSON.stringify(restoreData.expenses));
+                }
+                if (restoreData.theme) {
+                    localStorage.setItem('sk_theme', restoreData.theme);
+                }
+                
+                showToast("⚡ Database restored successfully! Reloading...");
+                setTimeout(() => {
+                    location.reload();
+                }, 1200);
+                
+            } catch (e) {
+                showToast("❌ Failed to parse backup file: " + e.message);
+                console.error("Parse error:", e);
+            }
         }
 
 
@@ -3838,6 +4410,8 @@
             if (checkOption) {
                 localStorage.removeItem('sk_inventory');
                 localStorage.removeItem('sk_bills');
+                localStorage.removeItem('sk_suppliers');
+                localStorage.removeItem('sk_expenses');
                 showToast("⚙️ Database restored to factory defaults.");
                 setTimeout(() => {
                     location.reload();

@@ -387,31 +387,57 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
+            padding: 14px 16px;
             background-color: var(--surface-color);
             border-radius: 12px;
             border-left: 4px solid var(--primary-color);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+            margin-bottom: 2px;
+        }
+
+        .bill-sm-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+            background-color: var(--primary-light);
+        }
+
+        .bill-sm-card:active {
+            transform: scale(0.98);
         }
 
         .bill-sm-card.status-pending {
             border-left-color: var(--warning-color);
         }
 
+        .bill-sm-card.status-pending:hover {
+            background-color: #FFF3E0;
+        }
+
         .bill-sm-left {
             display: flex;
             flex-direction: column;
             gap: 4px;
+            min-width: 0;
+            flex: 1;
+            padding-right: 8px;
         }
 
         .bill-sm-name {
             font-weight: 700;
             font-size: 14px;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .bill-sm-date {
             font-size: 11px;
             color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .bill-sm-right {
@@ -420,11 +446,13 @@
             flex-direction: column;
             align-items: flex-end;
             gap: 4px;
+            flex-shrink: 0;
         }
 
         .bill-sm-total {
             font-weight: 800;
             font-size: 15px;
+            color: var(--text-color);
         }
 
         /* TAB 2: INVENTORY LAYOUT */
@@ -1319,6 +1347,7 @@
                         <select id="report-period" onchange="generateSalesReport()" style="padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 12px; background: var(--bg-color); color: var(--text-color); font-weight: bold;">
                             <option value="daily">📅 Today's Report</option>
                             <option value="weekly">📅 Weekly Report (7d)</option>
+                            <option value="monthly">📅 Monthly Report (30d)</option>
                         </select>
                     </div>
 
@@ -1520,12 +1549,14 @@
 
         <!-- 4. BILL HISTORY TAB VIEW -->
         <section id="tab-history" class="tab-panel">
-            <div class="input-search-container">
-                <span class="search-prefix-icon">🔍</span>
-                <input type="text" class="input-search" id="history-search" placeholder="Search customer name..." oninput="renderHistory()">
+            <div class="search-add-bar">
+                <div class="input-search-container">
+                    <span class="search-prefix-icon">🔍</span>
+                    <input type="text" class="input-search" id="history-search" placeholder="Search customer name, bill ID, or phone..." oninput="renderHistory()">
+                </div>
             </div>
 
-            <div class="filter-segmented-bar">
+            <div class="filter-segmented-bar" style="flex-shrink: 0;">
                 <button class="filter-seg-btn active" id="hist-filter-all" onclick="setHistoryFilter('All')">All</button>
                 <button class="filter-seg-btn" id="hist-filter-paid" onclick="setHistoryFilter('Paid')">Paid</button>
                 <button class="filter-seg-btn" id="hist-filter-pending" onclick="setHistoryFilter('Pending')">Pending</button>
@@ -1740,6 +1771,29 @@
         </div>
     </div>
 
+
+    <!-- Modal for Selection Source (Camera / Gallery) for AI Scan -->
+    <div class="modal-overlay" id="modal-ai-scan-choice" style="z-index: 1060;">
+        <div class="modal-sheet" style="max-width: 320px; border-radius: 20px; padding: 24px 16px;">
+            <header class="modal-header" style="border-bottom: none; margin-bottom: 8px; justify-content: center;">
+                <h3 class="modal-title" style="font-size: 18px; font-weight: 800; text-align: center; color: var(--primary-dark);">📸 Choose Scan Source</h3>
+            </header>
+            <div class="modal-body" style="padding: 0; display: flex; flex-direction: column; gap: 14px; text-align: center;">
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; line-height: 1.4;">
+                    Do you want to take a new photograph with your camera or select an existing one from your gallery?
+                </p>
+                <button type="button" class="btn" onclick="triggerDirectCameraScan()" style="height: 50px; border-radius: 14px; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: bold; border: none; box-shadow: 0 4px 10px rgba(46,125,50,0.25);">
+                    <span style="font-size: 18px;">📸</span> Use Camera (Direct)
+                </button>
+                <button type="button" class="btn" onclick="triggerGalleryScan()" style="height: 50px; border-radius: 14px; background: var(--bg-color); color: var(--text-color); display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; font-weight: bold; border: 1px solid var(--border-color);">
+                    <span style="font-size: 18px;">📁</span> Select from Gallery
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="closeModal('modal-ai-scan-choice')" style="height: 40px; border-radius: 10px; font-size: 12px; font-weight: bold; border: none; background: transparent; color: var(--text-secondary); margin-top: 4px;">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal 4: AI Scanned Items Review & Edit -->
     <div class="modal-overlay" id="modal-scanned-items" style="z-index: 1050;">
@@ -2589,6 +2643,18 @@
                     const billDate = new Date(e.date);
                     return billDate >= sevenDaysAgo;
                 });
+            } else if (period === 'monthly') {
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(now.getDate() - 30);
+                filteredBills = bills.filter(b => {
+                    const parts = b.date.split('/');
+                    const billDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                    return billDate >= thirtyDaysAgo;
+                });
+                filteredExpenses = expenses.filter(e => {
+                    const billDate = new Date(e.date);
+                    return billDate >= thirtyDaysAgo;
+                });
             }
 
             const totalSalesSum = filteredBills.reduce((sum, b) => sum + b.total, 0);
@@ -2651,7 +2717,7 @@
 
         function shareReportToWhatsApp() {
             const period = document.getElementById('report-period').value;
-            const periodLabel = period === 'daily' ? "DAILY SALES REPORT" : "WEEKLY SALES REPORT";
+            const periodLabel = period === 'daily' ? "DAILY SALES REPORT" : (period === 'weekly' ? "WEEKLY SALES REPORT" : "MONTHLY SALES REPORT");
 
             const totalSales = document.getElementById('rep-total-sales').textContent;
             const profitVal = document.getElementById('rep-net-profit').textContent;
@@ -3682,7 +3748,11 @@
 
             // Apply search filter
             if (searchVal !== '') {
-                matched = matched.filter(b => b.customerName.toLowerCase().includes(searchVal));
+                matched = matched.filter(b => 
+                    b.customerName.toLowerCase().includes(searchVal) || 
+                    String(b.id).toLowerCase().includes(searchVal) || 
+                    (b.customerPhone && b.customerPhone.includes(searchVal))
+                );
             }
 
             // Apply segment classification filter
@@ -4471,18 +4541,118 @@
         let scannedPreviewItems = [];
 
         function triggerReceiptScan() {
+            openModal('modal-ai-scan-choice');
+        }
+
+        function triggerDirectCameraScan() {
+            closeModal('modal-ai-scan-choice');
+            if (typeof Android !== "undefined" && Android.captureCameraImage) {
+                Android.captureCameraImage();
+            } else {
+                const input = document.getElementById('ai-bill-file-input');
+                if (input) {
+                    input.setAttribute('capture', 'environment');
+                    input.click();
+                }
+            }
+        }
+
+        function triggerGalleryScan() {
+            closeModal('modal-ai-scan-choice');
             const input = document.getElementById('ai-bill-file-input');
             if (input) {
+                input.removeAttribute('capture');
                 input.click();
             }
         }
 
-        function handleAiBillScanSelected(event) {
+        // Offline high-precision local barcode scanner on client side
+        function scanFileForBarcode(file) {
+            return new Promise((resolve) => {
+                const tempScannerId = "temp-offline-scanner-" + Date.now();
+                const tempDiv = document.createElement("div");
+                tempDiv.id = tempScannerId;
+                tempDiv.style.display = "none";
+                document.body.appendChild(tempDiv);
+
+                try {
+                    const localScanner = new Html5Qrcode(tempScannerId);
+                    localScanner.scanFile(file, true)
+                        .then(decodedText => {
+                            console.log("Offline Barcode found successfully:", decodedText);
+                            document.body.removeChild(tempDiv);
+                            resolve(decodedText);
+                        })
+                        .catch(err => {
+                            console.log("No barcode detected offline by html5-qrcode:", err);
+                            document.body.removeChild(tempDiv);
+                            resolve(null);
+                        });
+                } catch (e) {
+                    console.error("Local barcode scan initialization error:", e);
+                    if (tempDiv.parentNode) {
+                        document.body.removeChild(tempDiv);
+                    }
+                    resolve(null);
+                }
+            });
+        }
+
+        // Convert base64 data to Blob so we can run Html5Qrcode scan local file scanning
+        function base64ToBlob(base64Data) {
+            try {
+                const arr = base64Data.split(',');
+                const mime = arr[0].match(/:(.*?);/) ? arr[0].match(/:(.*?);/)[1] : "image/jpeg";
+                const bstr = atob(base64Data.includes(",") ? base64Data.split(',')[1] : base64Data);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new Blob([u8arr], { type: mime });
+            } catch (e) {
+                console.error("Base64 to Blob conversion error:", e);
+                return null;
+            }
+        }
+
+        async function handleDirectImageCaptured(base64Data) {
+            document.getElementById('ai-loading-overlay').style.display = 'flex';
+            const base64Str = base64Data.includes(",") ? base64Data.split(',')[1] : base64Data;
+            if (base64Str) {
+                let preScannedBarcode = null;
+                try {
+                    const blob = base64ToBlob(base64Data);
+                    if (blob) {
+                        preScannedBarcode = await scanFileForBarcode(blob);
+                    }
+                } catch (e) {
+                    console.error("Direct capture offline scan error:", e);
+                }
+                processReceiptWithGemini(base64Str, preScannedBarcode);
+            } else {
+                document.getElementById('ai-loading-overlay').style.display = 'none';
+                showToast("❌ Image capture failed to decode.");
+            }
+        }
+
+        async function handleAiBillScanSelected(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             // Show loading spinner
             document.getElementById('ai-loading-overlay').style.display = 'flex';
+
+            // Try local high-accuracy barcode scanning offline first
+            let preScannedBarcode = null;
+            try {
+                preScannedBarcode = await scanFileForBarcode(file);
+                if (preScannedBarcode) {
+                    console.log("Pre-scanned barcode offline:", preScannedBarcode);
+                }
+            } catch (e) {
+                console.error("File selection offline scan error:", e);
+            }
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -4516,7 +4686,7 @@
                     // Clean file input value to allow scan of the same file again
                     event.target.value = "";
 
-                    processReceiptWithGemini(compressedBase64);
+                    processReceiptWithGemini(compressedBase64, preScannedBarcode);
                 };
                 img.onerror = function() {
                     document.getElementById('ai-loading-overlay').style.display = 'none';
@@ -4531,7 +4701,7 @@
             reader.readAsDataURL(file);
         }
 
-        async function processReceiptWithGemini(base64Data) {
+        async function processReceiptWithGemini(base64Data, preScannedBarcode = null) {
             let apiKey = "";
             try {
                 if (typeof Android !== "undefined" && Android.getGeminiApiKey) {
@@ -4561,7 +4731,14 @@
             const modelName = "gemini-2.5-flash";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-            const promptText = "Analyze this receipt image of a bill or invoice and extract all individual purchased items. Identify the item Name (highly descriptive, clean, English title), Category (strictly evaluate and select one of: 'Grains', 'Dairy', 'Snacks', 'Beverages', 'Vegetables', 'Fruits', 'Household', 'Other'), Quantity/Stock (the parsed amount/number under qty), Unit Type (strictly identify if it fits 'kg', 'litre', 'piece', 'packet', 'box', 'dozen'), and Price (unit price rate for 1 single unit as a positive number). Extract all readable items. Return strictly a JSON array matching the requested response schema.";
+            const promptText = "Analyze this image of a product packaging, sticker, barcode, label, or receipt to extract accurate product/item details. Take your time to carefully locate and extract:\n" +
+                "1. Item Name: Reconstruct and clean up abbreviated receipt text into highly readable, clean English titles (e.g., 'BST RCE 5KG' should become 'Basmati Rice 5kg', or 'MRP SLT 1KG' should become 'Salt 1kg'). Exclude raw branding fluff if generic.\n" +
+                "2. Category: Evaluate and strictly select one of these values: 'Grains', 'Dairy', 'Snacks', 'Beverages', 'Vegetables', 'Fruits', 'Household', 'Other'. It must match the product type properly.\n" +
+                "3. Quantity/Stock: Extract the weight, volume, or count (under qty) as a clean positive number. Avoid letters.\n" +
+                "4. Unit Type: Select from 'kg', 'litre', 'piece', 'packet', 'box', 'dozen' (default to 'piece' if not stated or if it does not match).\n" +
+                "5. Price: Under unit price, find the rate for 1 single unit as a positive decimal number. For example, if a receipt lists 5 packets for ₹500, the unit price must be ₹100.\n" +
+                "6. Barcode: Hunt for any printed barcode number underneath black stripes, serial numbers, EAN, UPC, or barcode ID in the image. Return as a numeric string. If no barcode is visible or found, generate a 4-6 digit numeric placeholder (e.g., '2105').\n" +
+                "7. Threshold: Suggest low stock alert limits (default to 5).";
 
             const requestPayload = {
                 contents: [
@@ -4593,9 +4770,10 @@
                                             enum: ["kg", "litre", "piece", "packet", "box", "dozen"]
                                         },
                                         price: { type: "NUMBER" },
-                                        threshold: { type: "INTEGER" }
+                                        threshold: { type: "INTEGER" },
+                                        barcode: { type: "STRING" }
                                     },
-                                    required: ["name", "category", "qty", "unit", "price", "threshold"]
+                                    required: ["name", "category", "qty", "unit", "price", "threshold", "barcode"]
                                 }
                             }
                         },
@@ -4632,6 +4810,13 @@
                 const parsedJson = JSON.parse(textResult);
                 scannedPreviewItems = parsedJson.items || [];
 
+                // Overwrite with high-accuracy offline scanned barcode if found locally
+                if (preScannedBarcode && scannedPreviewItems.length > 0) {
+                    scannedPreviewItems.forEach(item => {
+                        item.barcode = preScannedBarcode;
+                    });
+                }
+
                 document.getElementById('ai-loading-overlay').style.display = 'none';
 
                 if (scannedPreviewItems.length === 0) {
@@ -4666,6 +4851,11 @@
                         <input type="text" value="${escapeMarkup(item.name)}" style="width: 88%; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 700; background: var(--bg-color); color: var(--text-color);" oninput="updateScannedPreviewItem(${idx}, 'name', this.value)">
                     </div>
                     
+                    <div style="flex-direction: column; display: flex; gap: 3px;">
+                        <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Barcode / SKU</label>
+                        <input type="text" value="${escapeMarkup(item.barcode || '')}" style="width: 88%; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 10px; font-size: 12px; background: var(--bg-color); color: var(--text-color);" placeholder="Barcode/SKU number..." oninput="updateScannedPreviewItem(${idx}, 'barcode', this.value)">
+                    </div>
+
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                         <div style="flex-direction: column; display: flex; gap: 3px;">
                             <label style="font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Category</label>
@@ -4740,6 +4930,9 @@
                 if (match) {
                     match.qty = parseFloat((parseFloat(match.qty) + parseFloat(scannedItem.qty)).toFixed(3));
                     match.price = scannedItem.price;
+                    if (!match.barcode && scannedItem.barcode) {
+                        match.barcode = scannedItem.barcode;
+                    }
                     updatedCount++;
                 } else {
                     const newId = 'inv_' + Math.floor(Math.random() * 1000000);
@@ -4750,7 +4943,8 @@
                         qty: scannedItem.qty,
                         unit: scannedItem.unit,
                         price: scannedItem.price,
-                        threshold: scannedItem.threshold || 5
+                        threshold: scannedItem.threshold || 5,
+                        barcode: scannedItem.barcode || ""
                     });
                     addedCount++;
                 }
